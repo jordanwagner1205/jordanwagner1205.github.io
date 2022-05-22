@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form>
+        <select name="chaosRank" id="chaosRank">
+            <option value="0">1</option>
+            <option value="1">2</option>
+            <option value="2">3</option>
+            <option value="3">4</option>
+            <option value="4">5</option>
+            <option value="5">6</option>
+            <option value="6">7</option>
+            <option value="7">8</option>
+            <option value="8">9</option>
+        </select>
+        <select name="Likelihood" id="Likelihood">
+            <option value="0">Impossible</option>
+            <option value="1">No way</option>
+            <option value="2">Very unlikely</option>
+            <option value="3">Unlikely</option>
+            <option value="4">50/50</option>
+            <option value="5">Somewhat likely</option>
+            <option value="6">Likely</option>
+            <option value="7">Very likely</option>
+            <option value="8">Near sure thing</option>  
+            <option value="9">A sure thing</option>  
+            <option value="10">Has to be</option>  
+        </select>
+        <br>
+        <button type="button" onclick="randomResult()">Click me!</button>
+        <br>
+        <h1 id="d100">d100 Result</h1>
+        <h1 id="answer">Yes, No, Exceptional</h1>
+    </form>
+    
+    <script>
+        function randomIntFromInterval(min, max) { // min and max included 
+    return Math.floor(Math.random() * (100 - min + 1) + 1)
+    }
+
+    let rndInt = 0;
+    let ans = "Maybe";
+    let likley = 4;
+    let chaos = 5;
+    let low = 10;
+    let mid = 50;
+    let high = 91;
+
+    const fateChart = [[[0,-20,77],[0,0,81],[1,5,82],[1,5,82],[2,10,83],[4,20,85],[5,25,86],[9,45,90],[10,50,91],[11,55,92],[16,85,97]],[[0,0,81],[1,5,82],[1,5,82],[2,10,83],[3,15,84],[5,25,86],[7,35,88],[10,50,91],[11,55,92],[13,65,94],[16,85,97]],[[0,0,81],[1,5,82],[2,10,83],[3,15,84],[5,25,86],[9,45,90],[10,50,91],[13,65,94],[15,75,96],[16,80,97],[18,90,99]],[[1,5,82],[2,10,83],[3,15,84],[4,20,85],[7,35,88],[10,50,91],[11,55,92],[15,75,96],[16,80,97],[16,85,97],[19,95,100]],[[1,5,82],[3,15,84],[5,25,86],[7,35,88],[10,50,91],[13,65,94],[15,75,96],[16,85,97],[18,90,99],[18,90,99],[19,95,100]],[[2,10,83],[5,25,86],[9,45,90],[10,50,91],[13,65,94],[16,80,97],[16,85,97],[18,90,99],[19,95,100],[19,95,100],[20,100,0]],[[3,15,84],[7,35,88],[10,50,91],[11,55,92],[15,75,96],[16,85,97],[18,90,99],[19,95,100],[19,95,100],[19,95,100],[20,100,0]],[[5,25,86],[10,50,91],[13,65,94],[15,75,96],[16,85,97],[18,90,99],[19,95,100],[19,95,100],[20,100,0],[22,110,0],[26,130,0]],[[10,50,91],[15,75,96],[16,85,97],[18,90,99],[19,95,100],[19,95,100],[20,100,0],[21,105,0],[23,115,0],[25,125,0],[26,145,0]]];
+
+ 
+    function randomResult() {
+    rndInt = randomIntFromInterval(1, 6)
+    likely = document.querySelector('#Likelihood').value;
+    chaos = document.querySelector('#chaosRank').value;
+    low = fateChart[chaos][likely][0];
+    mid = fateChart[chaos][likely][1];
+    high = fateChart[chaos][likely][2];
+    if  (rndInt <= low){
+        ans = "Exceptional Yes"
+    } else if (rndInt <= mid) {
+        ans = "Yes"
+    } else if (rndInt < high) {
+        ans = "No"
+    } else {
+        ans = "Exceptional No"
+    }
+    document.getElementById("d100").innerHTML = rndInt;
+    document.getElementById("answer").innerHTML = ans;
+
+    }
+
+    </script>
+</body>
+</html>
