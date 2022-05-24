@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script defer src="theme.js"></script>
+    <meta name=
+    "apple-mobile-web-app-status-bar"
+          content="#aa7700">
+    <meta name="theme-color"
+          content="black">
+       <link rel="manifest"
+          href="manifest.json">
+    <script defer src="theme.js"></script>
   <link rel="stylesheet" href="style.css" />
   <link
     href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700&display=swap"
@@ -310,5 +317,25 @@
     }
 
     </script>
+    <script>
+        window.addEventListener('load', () => {
+        registerSW();
+        });
+    
+        // Register the Service Worker
+        async function registerSW() {
+        if ('serviceWorker' in navigator) {
+            try {
+            await navigator
+                    .serviceWorker
+                    .register('serviceworker.js');
+            }
+            catch (e) {
+            console.log('SW registration failed');
+            }
+        }
+        }
+    </script>
+    
 </body>
 </html>
