@@ -5,8 +5,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+   <nav class="navbar"></nav>
+   <main>
     <form>
         <h1 id="d100">d100 Result</h1>
         <h1 id="answer">Answer</h1>
@@ -38,7 +41,7 @@
         <br>
         <button type="button" onclick="randomResult()">Click me!</button>
     </form>
-    
+    </main>
     <script>
         function randomIntFromInterval(min, max) { // min and max included 
     return Math.floor(Math.random() * (100 - min + 1) + 1)
