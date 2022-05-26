@@ -215,9 +215,24 @@
     display: block;
   }
 
-  .form{
-    display: flex;
-    align-items: center;
-    color: var(--text-secondary);
-    text-decoration: none;
+  .select{
+    padding: 8px 12px;
+    color: #333333;
+    background-color:#eeeeee;
+    border: 1px solid #dddddd;
+    cursor: pointer;
+    border-radius: 5px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;utf8,');
+  }
+
+  .select:focus,
+  .select:hover{
+    outline: none;
+    border: 1px solid #bbbbbb;
+  }
+  .select option{
+    background: #ffffff;
   }
