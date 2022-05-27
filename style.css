@@ -216,8 +216,9 @@
   }
 
   .select{
-    padding: 16px 32px;
+    padding: 16px 16px;
     color: #333333;
+    float: right;
     background-color: #90cf92; /* Green */
     border: 1px solid #dddddd;
     cursor: pointer;
@@ -241,6 +242,8 @@
   .button {
     background-color: #4CAF50; /* Green */
     border: none;
+    margin:16px;
+    float: right;
     color: white;
     padding: 15px 32px;
     text-align: center;
@@ -257,8 +260,9 @@
   }
 
   h1 {
-    display:inline;
-    text-align:center;
+    padding: 35px 0;
+    border: 3px solid #90cf92;
+    text-align: center;
 }
 h1:after {
     content:"\a";
@@ -266,4 +270,10 @@ h1:after {
 }
 .lists{
   padding: 16px;
+}
+body {
+	display: flex;
+	height: 100vh;
+	flex-direction: column;
+	justify-content: center;
 }
