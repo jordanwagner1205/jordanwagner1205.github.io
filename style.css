@@ -216,13 +216,14 @@
   }
 
   .select{
-    padding: 8px 12px;
+    padding: 16px 32px;
     color: #333333;
     background-color: #90cf92; /* Green */
     border: 1px solid #dddddd;
     cursor: pointer;
     border-radius: 5px;
     appearance: none;
+    font-size:32px;
     -webkit-appearance: none;
     -moz-appearance: none;
     background-image: url('data:image/svg+xml;utf8,');
@@ -245,7 +246,7 @@
     text-align: center;
     text-decoration: none;
     display: inline-block;
-    font-size: 16px;
+    font-size: 32px;
     border-radius: 12px;
     box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
   }
@@ -254,3 +255,15 @@
     max-width: 500px;
     margin: auto;
   }
+
+  h1 {
+    display:inline;
+    text-align:center;
+}
+h1:after {
+    content:"\a";
+    white-space: pre;
+}
+.lists{
+  padding: 16px;
+}
