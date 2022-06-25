@@ -8,7 +8,6 @@
   <link rel="manifest" href="manifest.json">
   <script defer src="theme.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-  <meta http-equiv="ScreenOrientation" content="autoRotate:disabled">
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700&display=swap" rel="stylesheet" />
 </head>
@@ -130,7 +129,8 @@
     <form class="form">
       <h1 id="randEvent">Page 2</h1>
       <h1 id="d100">d100 Result</h1>
-      <h1 id="answer">Answer</h1>
+      <button type="button" class="button" onclick="randomResult()"id="answer">Answer</button>
+
       <div class="lists">
         <select name="chaosRank" id="chaosRank" class="select">
           <option value="0">1</option>
