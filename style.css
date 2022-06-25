@@ -242,8 +242,8 @@
   .button {
     background-color: #4CAF50; /* Green */
     border: none;
-    margin:16px;
-    width:30rem;
+    margin:0px;
+    width:28rem;
     float: right;
     color: white;
     padding: 15px 32px;
