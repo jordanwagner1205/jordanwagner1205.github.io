@@ -1,231 +1,1418 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="apple-mobile-web-app-status-bar" content="#aa7700">
-  <meta name="theme-color" content="black">
-  <link rel="manifest" href="manifest.json">
-  <script defer src="theme.js"></script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700&display=swap" rel="stylesheet" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motley Crews</title>
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiTW90bGV5IENyZXdzIiwic2hvcnRfbmFtZSI6Ik1vdGxleSIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsInRoZW1lX2NvbG9yIjoiIzJkM2E0ZiIsImJhY2tncm91bmRfY29sb3IiOiIjMWEyMDJjIn0=">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 100vw;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 15px 0;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .board-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 2px;
+            background: #2d3748;
+            padding: 8px;
+            border-radius: 10px;
+            max-width: 90vw;
+            aspect-ratio: 1;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            background: #4a5568;
+            border: 1px solid #2d3748;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .cell:hover {
+            background: #5a6578;
+        }
+
+        .cell.terrain {
+            background: #1a1a1a;
+            cursor: not-allowed;
+        }
+
+        .cell.deployment-a {
+            background: #1a365d;
+        }
+
+        .cell.deployment-b {
+            background: #742a2a;
+        }
+
+        .cell.highlighted {
+            background: #38a169 !important;
+            box-shadow: 0 0 10px #38a169;
+        }
+
+        .cell.attack-range {
+            background: #e53e3e !important;
+            box-shadow: 0 0 8px #e53e3e;
+        }
+
+        .cell.selected {
+            background: #3182ce !important;
+            box-shadow: 0 0 12px #3182ce;
+        }
+
+        .figure {
+            width: 90%;
+            height: 90%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 10px;
+            text-align: center;
+            line-height: 1;
+            cursor: pointer;
+            position: relative;
+            border: 2px solid;
+        }
+
+        .figure.player-a {
+            background: #3182ce;
+            border-color: #2c5282;
+            color: white;
+        }
+
+        .figure.player-b {
+            background: #e53e3e;
+            border-color: #c53030;
+            color: white;
+        }
+
+        .figure .health {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #1a202c;
+            color: #e2e8f0;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            font-weight: bold;
+            border: 1px solid #4a5568;
+        }
+
+        .actions {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .actions h3 {
+            margin-bottom: 10px;
+            color: #63b3ed;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 12px 16px;
+            background: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #2c5282;
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            background: #4a5568;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .btn.danger {
+            background: #e53e3e;
+        }
+
+        .btn.danger:hover:not(:disabled) {
+            background: #c53030;
+        }
+
+        .btn.success {
+            background: #38a169;
+        }
+
+        .btn.success:hover:not(:disabled) {
+            background: #2f855a;
+        }
+
+        .game-setup {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .character-select {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .character-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .character-card:hover {
+            background: rgba(0,0,0,0.5);
+            transform: translateY(-2px);
+        }
+
+        .character-card.placing {
+            border-color: #3182ce;
+            background: rgba(49, 130, 206, 0.2);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #2d3748;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .spell-grid {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .spell-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .spell-card:hover {
+            background: rgba(0,0,0,0.5);
+            border-color: #3182ce;
+        }
+
+        .spell-card h4 {
+            color: #63b3ed;
+            margin-bottom: 5px;
+        }
+
+        .status-effects {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        .turn-indicator {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .turn-player-a {
+            background: #3182ce;
+            color: white;
+        }
+
+        .turn-player-b {
+            background: #e53e3e;
+            color: white;
+        }
+
+        @media (max-width: 600px) {
+            .board {
+                max-width: 95vw;
+            }
+            
+            .figure {
+                font-size: 8px;
+            }
+            
+            .figure .health {
+                width: 14px;
+                height: 14px;
+                font-size: 7px;
+            }
+            
+            .btn {
+                min-width: 100px;
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+        }
+    </style>
 </head>
-
 <body>
-  <nav class="navbar">
-    <ul class="navbar-nav">
-      <li class="logo">
-        <a href="/index.html" class="nav-link">
-          <span class="link-text logo-text">Mythic</span>
-          <svg aria-hidden="true" focusable="false" data-prefix="fad" data-icon="angle-double-right" role="img"
-            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
-            class="svg-inline--fa fa-angle-double-right fa-w-14 fa-5x">
-            <g class="fa-group">
-              <path fill="currentColor"
-              d="M20.04 317.3C18 317.3 16 315.8 16 313.3V150.5c0-2.351 1.91-4.012 4.001-4.012c.6882 0 1.396 .18 2.062 .5748l76.62 45.1l-75.28 122.3C22.59 316.8 21.31 317.3 20.04 317.3zM231.4 405.2l-208.2-22.06c-4.27-.4821-7.123-4.117-7.123-7.995c0-1.401 .3725-2.834 1.185-4.161L122.7 215.1L231.4 405.2zM31.1 420.1c0-2.039 1.508-4.068 3.93-4.068c.1654 0 .3351 .0095 .5089 .0291l203.6 22.31v65.66C239.1 508.6 236.2 512 232 512c-1.113 0-2.255-.2387-3.363-.7565L34.25 423.6C32.69 422.8 31.1 421.4 31.1 420.1zM33.94 117.1c-1.289-.7641-1.938-2.088-1.938-3.417c0-1.281 .6019-2.567 1.813-3.364l150.8-98.59C185.1 10.98 187.3 10.64 188.6 10.64c4.32 0 8.003 3.721 8.003 8.022c0 1.379-.3788 2.818-1.237 4.214L115.5 165.8L33.94 117.1zM146.8 175.1l95.59-168.4C245.5 2.53 250.7 0 255.1 0s10.5 2.53 13.62 7.624l95.59 168.4H146.8zM356.4 207.1l-100.4 175.7L155.6 207.1H356.4zM476.1 415.1c2.422 0 3.93 2.029 3.93 4.068c0 1.378-.6893 2.761-2.252 3.524l-194.4 87.66c-1.103 .5092-2.241 .7443-3.35 .7443c-4.2 0-7.994-3.371-7.994-7.994v-65.69l203.6-22.28C475.7 416 475.9 415.1 476.1 415.1zM494.8 370.9C495.6 372.3 496 373.7 496 375.1c0 3.872-2.841 7.499-7.128 7.98l-208.2 22.06l108.6-190.1L494.8 370.9zM316.6 22.87c-.8581-1.395-1.237-2.834-1.237-4.214c0-4.301 3.683-8.022 8.003-8.022c1.308 0 2.675 .3411 4.015 1.11l150.8 98.59c1.211 .7973 1.813 2.076 1.813 3.353c0 1.325-.6488 2.649-1.938 3.429L396.5 165.8L316.6 22.87zM491.1 146.5c2.091 0 4.001 1.661 4.001 4.012v162.8c0 2.483-2.016 4.006-4.053 4.006c-1.27 0-2.549-.5919-3.353-1.912l-75.28-122.3l76.62-45.1C490.6 146.7 491.3 146.5 491.1 146.5z"class="fa-primary"></path>
-            </g>
-          </svg>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="/index.html" class="nav-link">
-          <svg aria-hidden="true" focusable="false" data-prefix="fad" data-icon="cat" role="img"
-            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="svg-inline--fa fa-cat fa-w-16 fa-9x">
-            <g class="fa-group">
-              <path fill="currentColor"
-                d="M336.6 156.5C327.3 148.1 322.6 136.5 327.1 125.3L357.6 49.18C362.7 36.27 377.8 30.36 389.7 37.63C410.9 50.63 430 66.62 446.5 85.02C455.7 95.21 452.9 110.9 441.5 118.5L373.9 163.5C363.6 170.4 349.8 168.1 340.5 159.9C339.2 158.7 337.9 157.6 336.6 156.5H336.6zM297.7 112.6C293.2 123.1 280.9 129.8 268.7 128.6C264.6 128.2 260.3 128 256 128C251.7 128 247.4 128.2 243.3 128.6C231.1 129.8 218.8 123.1 214.3 112.6L183.1 36.82C178.8 24.02 185.5 9.433 198.1 6.374C217.3 2.203 236.4 0 256 0C275.6 0 294.7 2.203 313 6.374C326.5 9.433 333.2 24.02 328 36.82L297.7 112.6zM122.3 37.63C134.2 30.36 149.3 36.27 154.4 49.18L184.9 125.3C189.4 136.5 184.7 148.1 175.4 156.5C174.1 157.6 172.8 158.7 171.5 159.9C162.2 168.1 148.4 170.4 138.1 163.5L70.52 118.5C59.13 110.9 56.32 95.21 65.46 85.02C81.99 66.62 101.1 50.63 122.3 37.63H122.3zM379.5 222.1C376.3 210.7 379.7 198.1 389.5 191.6L458.1 145.8C469.7 138.1 485.6 141.9 491.2 154.7C501.6 178.8 508.4 204.8 510.9 232C512.1 245.2 501.3 255.1 488 255.1H408C394.7 255.1 384.2 245.2 381.8 232.1C381.1 228.7 380.4 225.4 379.5 222.1V222.1zM122.5 191.6C132.3 198.1 135.7 210.7 132.5 222.1C131.6 225.4 130.9 228.7 130.2 232.1C127.8 245.2 117.3 256 104 256H24C10.75 256-.1184 245.2 1.107 232C3.636 204.8 10.43 178.8 20.82 154.7C26.36 141.9 42.26 138.1 53.91 145.8L122.5 191.6zM104 288C117.3 288 128 298.7 128 312V360C128 373.3 117.3 384 104 384H24C10.75 384 0 373.3 0 360V312C0 298.7 10.75 288 24 288H104zM488 288C501.3 288 512 298.7 512 312V360C512 373.3 501.3 384 488 384H408C394.7 384 384 373.3 384 360V312C384 298.7 394.7 288 408 288H488zM104 416C117.3 416 128 426.7 128 440V488C128 501.3 117.3 512 104 512H24C10.75 512 0 501.3 0 488V440C0 426.7 10.75 416 24 416H104zM488 416C501.3 416 512 426.7 512 440V488C512 501.3 501.3 512 488 512H408C394.7 512 384 501.3 384 488V440C384 426.7 394.7 416 408 416H488zM272 464C272 472.8 264.8 480 256 480C247.2 480 240 472.8 240 464V192C240 183.2 247.2 176 256 176C264.8 176 272 183.2 272 192V464zM208 464C208 472.8 200.8 480 192 480C183.2 480 176 472.8 176 464V224C176 215.2 183.2 208 192 208C200.8 208 208 215.2 208 224V464zM336 464C336 472.8 328.8 480 320 480C311.2 480 304 472.8 304 464V224C304 215.2 311.2 208 320 208C328.8 208 336 215.2 336 224V464z"class="fa-secondary"></path>
-            </g>
-          </svg>
-          <span class="link-text">Fate Chart</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="randevent.html" class="nav-link">
-          <svg aria-hidden="true" focusable="false" data-prefix="fad" data-icon="alien-monster" role="img"
-            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"
-            class="svg-inline--fa fa-alien-monster fa-w-18 fa-9x">
-            <g class="fa-group">
-              <path fill="currentColor"
-              d="M18.43 255.8L192 224L100.8 292.6C90.67 302.8 97.8 320 112 320h222.7c-9.499-26.5-14.75-54.5-14.75-83.38V194.2L200.3 106.8C176.5 90.88 145 92.75 123.3 111.2l-117.5 116.4C-6.562 238 2.436 258 18.43 255.8zM575.2 289.9l-100.7-50.25c-16.25-8.125-26.5-24.75-26.5-43V160h63.99l28.12 22.62C546.1 188.6 554.2 192 562.7 192h30.1c11.1 0 23.12-6.875 28.5-17.75l14.37-28.62c5.374-10.87 4.25-23.75-2.999-33.5l-74.49-99.37C552.1 4.75 543.5 0 533.5 0H296C288.9 0 285.4 8.625 290.4 13.62L351.1 64L292.4 88.75c-5.874 3-5.874 11.37 0 14.37L351.1 128l-.0011 108.6c0 72 35.99 139.4 95.99 179.4c-195.6 6.75-344.4 41-434.1 60.88c-8.124 1.75-13.87 9-13.87 17.38C.0463 504 8.045 512 17.79 512h499.1c63.24 0 119.6-47.5 122.1-110.8C642.3 354 617.1 310.9 575.2 289.9zM489.1 66.25l45.74 11.38c-2.75 11-12.5 18.88-24.12 18.25C497.7 95.25 484.8 83.38 489.1 66.25z"
-                class="fa-primary"></path>
-              <path fill="currentColor" d="M160,320h64V224H160Zm192-96v96h64V224Z" class="fa-primary"></path>
-            </g>
-          </svg>
-          <span class="link-text">Random Event</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link">
-          <svg aria-hidden="true" focusable="false" data-prefix="fad" data-icon="space-station-moon-alt" role="img"
-            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"
-            class="svg-inline--fa fa-space-station-moon-alt fa-w-16 fa-5x">
-            <g class="fa-group">
-              <path fill="currentColor"
-              d="M48 32C21.5 32 0 53.5 0 80v64C0 152.9 7.125 160 16 160H96V80C96 53.5 74.5 32 48 32zM256 380.6V320h224V128c0-53-43-96-96-96H111.6C121.8 45.38 128 61.88 128 80V384c0 38.88 34.62 69.63 74.75 63.13C234.3 442 256 412.5 256 380.6zM288 352v32c0 52.88-43 96-96 96h272c61.88 0 112-50.13 112-112c0-8.875-7.125-16-16-16H288z"
-                class="fa-primary"></path>
-            </g>
-          </svg>
-          <span class="link-text">Scene Setup</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link">
-          <svg aria-hidden="true" focusable="false" data-prefix="fad" data-icon="space-shuttle" role="img"
-            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
-            class="svg-inline--fa fa-space-shuttle fa-w-20 fa-5x">
-            <g class="fa-group">
-              <path fill="currentColor"
-              d="M200 376l-49.23-16.41c-7.289-2.434-7.289-12.75 0-15.18L200 328l16.41-49.23c2.434-7.289 12.75-7.289 15.18 0L248 328l49.23 16.41c7.289 2.434 7.289 12.75 0 15.18L248 376L240 416H448l-86.38-201.6C355.4 200 354.8 183.8 359.8 168.9L416 0L228.4 107.3C204.8 120.8 185.1 141.4 175 166.4L64 416h144L200 376zM231.2 172.4L256 160l12.42-24.84c1.477-2.949 5.68-2.949 7.156 0L288 160l24.84 12.42c2.949 1.477 2.949 5.68 0 7.156L288 192l-12.42 24.84c-1.477 2.949-5.68 2.949-7.156 0L256 192L231.2 179.6C228.2 178.1 228.2 173.9 231.2 172.4zM496 448h-480C7.164 448 0 455.2 0 464C0 490.5 21.49 512 48 512h416c26.51 0 48-21.49 48-48C512 455.2 504.8 448 496 448z"
-                class="fa-secondary"></path>
-            </g>
-          </svg>
-          <span class="link-text">idk yet</span>
-        </a>
-      </li>
-      <li class="nav-item" id="themeButton">
-        <a href="#" class="nav-link">
-          <svg class="theme-icon" id="lightIcon" aria-hidden="true" focusable="false" data-prefix="fad"
-            data-icon="moon-stars" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
-            class="svg-inline--fa fa-moon-stars fa-w-16 fa-7x">
-            <g class="fa-group">
-              <path fill="currentColor"
-                d="M320 32L304 0l-16 32-32 16 32 16 16 32 16-32 32-16zm138.7 149.3L432 128l-26.7 53.3L352 208l53.3 26.7L432 288l26.7-53.3L512 208z"
-                class="fa-secondary"></path>
-              <path fill="currentColor"
-                d="M332.2 426.4c8.1-1.6 13.9 8 8.6 14.5a191.18 191.18 0 0 1-149 71.1C85.8 512 0 426 0 320c0-120 108.7-210.6 227-188.8 8.2 1.6 10.1 12.6 2.8 16.7a150.3 150.3 0 0 0-76.1 130.8c0 94 85.4 165.4 178.5 147.7z"
-                class="fa-primary"></path>
-            </g>
-          </svg>
-          <svg class="theme-icon" id="solarIcon" aria-hidden="true" focusable="false" data-prefix="fad" data-icon="sun"
-            role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
-            class="svg-inline--fa fa-sun fa-w-16 fa-7x">
-            <g class="fa-group">
-              <path fill="currentColor"
-                d="M502.42 240.5l-94.7-47.3 33.5-100.4c4.5-13.6-8.4-26.5-21.9-21.9l-100.4 33.5-47.41-94.8a17.31 17.31 0 0 0-31 0l-47.3 94.7L92.7 70.8c-13.6-4.5-26.5 8.4-21.9 21.9l33.5 100.4-94.7 47.4a17.31 17.31 0 0 0 0 31l94.7 47.3-33.5 100.5c-4.5 13.6 8.4 26.5 21.9 21.9l100.41-33.5 47.3 94.7a17.31 17.31 0 0 0 31 0l47.31-94.7 100.4 33.5c13.6 4.5 26.5-8.4 21.9-21.9l-33.5-100.4 94.7-47.3a17.33 17.33 0 0 0 .2-31.1zm-155.9 106c-49.91 49.9-131.11 49.9-181 0a128.13 128.13 0 0 1 0-181c49.9-49.9 131.1-49.9 181 0a128.13 128.13 0 0 1 0 181z"
-                class="fa-secondary"></path>
-              <path fill="currentColor" d="M352 256a96 96 0 1 1-96-96 96.15 96.15 0 0 1 96 96z" class="fa-primary">
-              </path>
-            </g>
-          </svg>
-          <svg class="theme-icon" id="darkIcon" aria-hidden="true" focusable="false" data-prefix="fad"
-            data-icon="sunglasses" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"
-            class="svg-inline--fa fa-sunglasses fa-w-18 fa-7x">
-            <g class="fa-group">
-              <path fill="currentColor"
-                d="M574.09 280.38L528.75 98.66a87.94 87.94 0 0 0-113.19-62.14l-15.25 5.08a16 16 0 0 0-10.12 20.25L395.25 77a16 16 0 0 0 20.22 10.13l13.19-4.39c10.87-3.63 23-3.57 33.15 1.73a39.59 39.59 0 0 1 20.38 25.81l38.47 153.83a276.7 276.7 0 0 0-81.22-12.47c-34.75 0-74 7-114.85 26.75h-73.18c-40.85-19.75-80.07-26.75-114.85-26.75a276.75 276.75 0 0 0-81.22 12.45l38.47-153.8a39.61 39.61 0 0 1 20.38-25.82c10.15-5.29 22.28-5.34 33.15-1.73l13.16 4.39A16 16 0 0 0 180.75 77l5.06-15.19a16 16 0 0 0-10.12-20.21l-15.25-5.08A87.95 87.95 0 0 0 47.25 98.65L1.91 280.38A75.35 75.35 0 0 0 0 295.86v70.25C0 429 51.59 480 115.19 480h37.12c60.28 0 110.38-45.94 114.88-105.37l2.93-38.63h35.76l2.93 38.63c4.5 59.43 54.6 105.37 114.88 105.37h37.12C524.41 480 576 429 576 366.13v-70.25a62.67 62.67 0 0 0-1.91-15.5zM203.38 369.8c-2 25.9-24.41 46.2-51.07 46.2h-37.12C87 416 64 393.63 64 366.11v-37.55a217.35 217.35 0 0 1 72.59-12.9 196.51 196.51 0 0 1 69.91 12.9zM512 366.13c0 27.5-23 49.87-51.19 49.87h-37.12c-26.69 0-49.1-20.3-51.07-46.2l-3.12-41.24a196.55 196.55 0 0 1 69.94-12.9A217.41 217.41 0 0 1 512 328.58z"
-                class="fa-secondary"></path>
-              <path fill="currentColor"
-                d="M64.19 367.9c0-.61-.19-1.18-.19-1.8 0 27.53 23 49.9 51.19 49.9h37.12c26.66 0 49.1-20.3 51.07-46.2l3.12-41.24c-14-5.29-28.31-8.38-42.78-10.42zm404-50l-95.83 47.91.3 4c2 25.9 24.38 46.2 51.07 46.2h37.12C489 416 512 393.63 512 366.13v-37.55a227.76 227.76 0 0 0-43.85-10.66z"
-                class="fa-primary"></path>
-            </g>
-          </svg>
-          <span class="link-text">Themify</span>
-        </a>
-      </li>
-    </ul>
-  </nav>
-  <main>
-    <form class="form">
-      <h1 id="randEvent">Random Event?</h1>
-      <h1 id="d100">d100 Result</h1>
-      <h1 id="answer">Answer</h1>
-      <div class="lists">
-        <select name="chaosRank" id="chaosRank" class="select">
-          <option value="0">1</option>
-          <option value="1">2</option>
-          <option value="2">3</option>
-          <option value="3">4</option>
-          <option selected value="4">5</option>
-          <option value="5">6</option>
-          <option value="6">7</option>
-          <option value="7">8</option>
-          <option value="8">9</option>
-        </select>
-        <select name="Likelihood" id="Likelihood" class="select">
-          <option value="0">Impossible</option>
-          <option value="1">No way</option>
-          <option value="2">Very unlikely</option>
-          <option value="3">Unlikely</option>
-          <option selected value="4">50/50</option>
-          <option value="5">Somewhat likely</option>
-          <option value="6">Likely</option>
-          <option value="7">Very likely</option>
-          <option value="8">Near sure thing</option>
-          <option value="9">A sure thing</option>
-          <option value="10">Has to be</option>
-        </select>
-      </div>
-      <button type="button" class="button" onclick="randomResult()">Click me!</button>
-    </form>
-  </main>
-  <script>
-    function randomIntFromInterval(min, max) { // min and max included 
-      return Math.floor(Math.random() * (max - min + 1) + 1)
-    }
+    <div class="container">
+        <div class="header">
+            <h1>⚔️ Motley Crews</h1>
+        </div>
+        
+        <div id="gameSetup" class="game-setup">
+            <h2>Place Your Characters</h2>
+            <p id="setupInstructions">Click a character, then click a cell in your deployment zone</p>
+            
+            <div class="character-select" id="characterSelect">
+                <!-- Characters will be populated here -->
+            </div>
+            
+            <button class="btn" id="startGameBtn" style="display: none;">Start Game</button>
+        </div>
+        
+        <div id="gameBoard" style="display: none;">
+            <div class="game-info">
+                <div>
+                    <div class="turn-indicator" id="turnIndicator">Player A's Turn</div>
+                </div>
+                <div>Score: <span id="scoreA">0</span> - <span id="scoreB">0</span></div>
+                <div>Turn: <span id="turnCounter">1</span></div>
+            </div>
+            
+            <div id="statusEffects" class="status-effects" style="display: none;">
+                <h4>Active Effects:</h4>
+                <div id="effectsList"></div>
+            </div>
+            
+            <div class="board-container">
+                <div class="board" id="board">
+                    <!-- Board cells will be generated here -->
+                </div>
+            </div>
+            
+            <div class="actions">
+                <h3>Actions</h3>
+                <div class="action-buttons">
+                    <button class="btn" id="moveBtn" disabled>Move</button>
+                    <button class="btn danger" id="attackBtn" disabled>Attack</button>
+                    <button class="btn" id="specialBtn" disabled>Special Action</button>
+                    <button class="btn" id="spellBtn" disabled>Cast Spell</button>
+                    <button class="btn success" id="endTurnBtn">End Turn</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    let rndInt = 0;
-    let rndEvnt = "!";
-    let ans = "Maybe";
-    let likley = 4;
-    let chaos = 5;
-    let low = 10;
-    let mid = 50;
-    let high = 91;
+    <!-- Spell Modal -->
+    <div id="spellModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Choose Spell</h3>
+            <div id="spellGrid" class="spell-grid">
+                <!-- Spells will be populated here -->
+            </div>
+            <button class="btn" onclick="closeSpellModal()" style="margin-top: 15px;">Cancel</button>
+        </div>
+    </div>
 
-    const fateChart = [[[0, -20, 77], [0, 0, 81], [1, 5, 82], [1, 5, 82], [2, 10, 83], [4, 20, 85], [5, 25, 86], [9, 45, 90], [10, 50, 91], [11, 55, 92], [16, 85, 97]], [[0, 0, 81], [1, 5, 82], [1, 5, 82], [2, 10, 83], [3, 15, 84], [5, 25, 86], [7, 35, 88], [10, 50, 91], [11, 55, 92], [13, 65, 94], [16, 85, 97]], [[0, 0, 81], [1, 5, 82], [2, 10, 83], [3, 15, 84], [5, 25, 86], [9, 45, 90], [10, 50, 91], [13, 65, 94], [15, 75, 96], [16, 80, 97], [18, 90, 99]], [[1, 5, 82], [2, 10, 83], [3, 15, 84], [4, 20, 85], [7, 35, 88], [10, 50, 91], [11, 55, 92], [15, 75, 96], [16, 80, 97], [16, 85, 97], [19, 95, 100]], [[1, 5, 82], [3, 15, 84], [5, 25, 86], [7, 35, 88], [10, 50, 91], [13, 65, 94], [15, 75, 96], [16, 85, 97], [18, 90, 99], [18, 90, 99], [19, 95, 100]], [[2, 10, 83], [5, 25, 86], [9, 45, 90], [10, 50, 91], [13, 65, 94], [16, 80, 97], [16, 85, 97], [18, 90, 99], [19, 95, 100], [19, 95, 100], [20, 100, 0]], [[3, 15, 84], [7, 35, 88], [10, 50, 91], [11, 55, 92], [15, 75, 96], [16, 85, 97], [18, 90, 99], [19, 95, 100], [19, 95, 100], [19, 95, 100], [20, 100, 0]], [[5, 25, 86], [10, 50, 91], [13, 65, 94], [15, 75, 96], [16, 85, 97], [18, 90, 99], [19, 95, 100], [19, 95, 100], [20, 100, 0], [22, 110, 0], [26, 130, 0]], [[10, 50, 91], [15, 75, 96], [16, 85, 97], [18, 90, 99], [19, 95, 100], [19, 95, 100], [20, 100, 0], [21, 105, 0], [23, 115, 0], [25, 125, 0], [26, 145, 0]]];
+    <script>
+        // Game state
+        let gameState = {
+            currentPlayer: 'A',
+            turnCount: 1,
+            phase: 'setup', // setup, playing, ended
+            selectedFigure: null,
+            selectedAction: null,
+            hasMoved: false,
+            hasActed: false,
+            score: { A: 0, B: 0 },
+            board: {},
+            statusEffects: [],
+            setupPhase: {
+                currentPlayer: 'A',
+                charactersToPlace: {
+                    A: ['Knight', 'Barbarian', 'Arbalist', 'Black Mage', 'White Mage'],
+                    B: ['Knight', 'Barbarian', 'Arbalist', 'Black Mage', 'White Mage']
+                }
+            }
+        };
 
-    function randomResult() {
-      rndInt = randomIntFromInterval(1, 100)
-      rndEvnt = null;
-      likely = document.querySelector('#Likelihood').value;
-      chaos = document.querySelector('#chaosRank').value;
-      low = fateChart[chaos][likely][0];
-      mid = fateChart[chaos][likely][1];
-      high = fateChart[chaos][likely][2];
-      if (rndInt <= low) {
-        ans = "Exceptional Yes"
-      } else if (rndInt <= mid) {
-        ans = "Yes"
-      } else if (rndInt < high) {
-        ans = "No"
-      } else {
-        ans = "Exceptional No"
-      }
+        // Character definitions
+        const characters = {
+            'Knight': { health: 7, move: 4, attack: 3, reach: 1, symbol: '♞' },
+            'Barbarian': { health: 6, move: 3, attack: 4, reach: 1, symbol: '⚡' },
+            'Arbalist': { health: 5, move: 2, attack: 2, reach: 3, symbol: '🏹' },
+            'Black Mage': { health: 4, move: 2, attack: 1, reach: 2, symbol: '🔮' },
+            'White Mage': { health: 4, move: 2, attack: 1, reach: 2, symbol: '✨' }
+        };
 
-      if ((rndInt % 11) == 0) {
-        if (rndInt / 11 <= chaos + 1) {
-          rndEvnt = "Random Event!";
+        // Board configuration
+        const deploymentZones = {
+            A: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'D1', 'D2', 'E1', 'E2', 'F1', 'F2', 'G1', 'G2', 'H1', 'H2'],
+            B: ['A7', 'A8', 'B7', 'B8', 'C7', 'C8', 'D7', 'D8', 'E7', 'E8', 'F7', 'F8', 'G7', 'G8', 'H7', 'H8']
+        };
+
+        const terrainSquares = ['B4', 'G5'];
+
+        // Initialize the game
+        function initGame() {
+            createBoard();
+            setupCharacterSelection();
+            updateUI();
         }
-      }
 
-      document.getElementById("randEvent").innerHTML = rndEvnt;
-      document.getElementById("d100").innerHTML = rndInt;
-      document.getElementById("answer").innerHTML = ans;
+        function createBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
 
-    }
+            for (let row = 8; row >= 1; row--) {
+                for (let col = 1; col <= 8; col++) {
+                    const colLetter = String.fromCharCode(64 + col); // A-H
+                    const cellId = `${colLetter}${row}`;
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.id = cellId;
+                    cell.onclick = () => handleCellClick(cellId);
 
-  </script>
-  <script>
-    window.addEventListener('load', () => {
-      registerSW();
-    });
+                    // Add terrain
+                    if (terrainSquares.includes(cellId)) {
+                        cell.classList.add('terrain');
+                        cell.textContent = '🏔️';
+                    }
 
-    // Register the Service Worker
-    async function registerSW() {
-      if ('serviceWorker' in navigator) {
-        try {
-          await navigator
-            .serviceWorker
-            .register('serviceworker.js');
+                    // Add deployment zones
+                    if (deploymentZones.A.includes(cellId)) {
+                        cell.classList.add('deployment-a');
+                    } else if (deploymentZones.B.includes(cellId)) {
+                        cell.classList.add('deployment-b');
+                    }
+
+                    board.appendChild(cell);
+                }
+            }
         }
-        catch (e) {
-          console.log('SW registration failed');
-        }
-      }
-    }
-  </script>
 
+        function setupCharacterSelection() {
+            const characterSelect = document.getElementById('characterSelect');
+            characterSelect.innerHTML = '';
+
+            gameState.setupPhase.charactersToPlace[gameState.setupPhase.currentPlayer].forEach(charName => {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                card.onclick = () => selectCharacterForPlacement(charName);
+                
+                const char = characters[charName];
+                card.innerHTML = `
+                    <div style="font-size: 24px; margin-bottom: 10px;">${char.symbol}</div>
+                    <h4>${charName}</h4>
+                    <div>Health: ${char.health}</div>
+                    <div>Move: ${char.move}</div>
+                    <div>Attack: ${char.attack}</div>
+                    <div>Reach: ${char.reach}</div>
+                `;
+                
+                characterSelect.appendChild(card);
+            });
+        }
+
+        let selectedCharacterForPlacement = null;
+
+        function selectCharacterForPlacement(charName) {
+            // Remove previous selection
+            document.querySelectorAll('.character-card').forEach(card => {
+                card.classList.remove('placing');
+            });
+
+            // Select new character
+            selectedCharacterForPlacement = charName;
+            event.target.closest('.character-card').classList.add('placing');
+            
+            document.getElementById('setupInstructions').textContent = 
+                `Place ${charName} in your deployment zone (${gameState.setupPhase.currentPlayer === 'A' ? 'blue' : 'red'} squares)`;
+        }
+
+        function handleCellClick(cellId) {
+            if (gameState.phase === 'setup') {
+                handleSetupClick(cellId);
+            } else if (gameState.phase === 'playing') {
+                handleGameClick(cellId);
+            }
+        }
+
+        function handleSetupClick(cellId) {
+            if (!selectedCharacterForPlacement) {
+                alert('Please select a character first');
+                return;
+            }
+
+            const currentPlayerZone = deploymentZones[gameState.setupPhase.currentPlayer];
+            if (!currentPlayerZone.includes(cellId)) {
+                alert('You can only place characters in your deployment zone');
+                return;
+            }
+
+            if (gameState.board[cellId]) {
+                alert('Cell is already occupied');
+                return;
+            }
+
+            // Place the character
+            const charData = characters[selectedCharacterForPlacement];
+            gameState.board[cellId] = {
+                type: selectedCharacterForPlacement,
+                player: gameState.setupPhase.currentPlayer,
+                health: charData.health,
+                maxHealth: charData.health,
+                id: `${gameState.setupPhase.currentPlayer}_${selectedCharacterForPlacement}`
+            };
+
+            // Remove from available characters
+            const index = gameState.setupPhase.charactersToPlace[gameState.setupPhase.currentPlayer].indexOf(selectedCharacterForPlacement);
+            gameState.setupPhase.charactersToPlace[gameState.setupPhase.currentPlayer].splice(index, 1);
+
+            selectedCharacterForPlacement = null;
+
+            // Check if current player is done
+            if (gameState.setupPhase.charactersToPlace[gameState.setupPhase.currentPlayer].length === 0) {
+                if (gameState.setupPhase.currentPlayer === 'A' && gameState.setupPhase.charactersToPlace.B.length > 0) {
+                    // Switch to player B
+                    gameState.setupPhase.currentPlayer = 'B';
+                    document.getElementById('setupInstructions').textContent = 'Player B: Place your characters';
+                } else {
+                    // Setup complete
+                    startGame();
+                    return;
+                }
+            }
+
+            setupCharacterSelection();
+            updateBoard();
+        }
+
+        function startGame() {
+            gameState.phase = 'playing';
+            document.getElementById('gameSetup').style.display = 'none';
+            document.getElementById('gameBoard').style.display = 'block';
+            updateUI();
+        }
+
+        function handleGameClick(cellId) {
+            const figure = gameState.board[cellId];
+
+            if (gameState.selectedAction === 'move' && gameState.selectedFigure) {
+                handleMove(cellId);
+            } else if (gameState.selectedAction === 'attack' && gameState.selectedFigure) {
+                handleAttack(cellId);
+            } else if (gameState.selectedAction && gameState.selectedAction.startsWith('spell_')) {
+                handleSpellTarget(cellId);
+            } else if (gameState.selectedAction === 'charge' && gameState.selectedFigure) {
+                handleCharge(cellId);
+            } else if (gameState.selectedAction === 'longEye' && gameState.selectedFigure) {
+                handleLongEye(cellId);
+            } else if (figure && figure.player === gameState.currentPlayer) {
+                selectFigure(cellId);
+            } else {
+                clearSelection();
+            }
+        }
+
+        function selectFigure(cellId) {
+            clearHighlights();
+            gameState.selectedFigure = cellId;
+            document.getElementById(cellId).classList.add('selected');
+            updateActionButtons();
+        }
+
+        function clearSelection() {
+            gameState.selectedFigure = null;
+            gameState.selectedAction = null;
+            clearHighlights();
+            updateActionButtons();
+        }
+
+        function clearHighlights() {
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('highlighted', 'attack-range', 'selected');
+            });
+        }
+
+        function updateActionButtons() {
+            const figure = gameState.selectedFigure ? gameState.board[gameState.selectedFigure] : null;
+            
+            document.getElementById('moveBtn').disabled = !figure || gameState.hasActed;
+            document.getElementById('attackBtn').disabled = !figure;
+            document.getElementById('specialBtn').disabled = !figure || !hasSpecialAction(figure.type);
+            document.getElementById('spellBtn').disabled = !figure || !isSpellcaster(figure.type);
+        }
+
+        function hasSpecialAction(type) {
+            return ['Knight', 'Arbalist'].includes(type);
+        }
+
+        function isSpellcaster(type) {
+            return ['Black Mage', 'White Mage'].includes(type);
+        }
+
+        // Movement logic
+        function startMove() {
+            if (!gameState.selectedFigure || gameState.hasActed) return;
+            
+            gameState.selectedAction = 'move';
+            highlightMovementRange();
+        }
+
+        function highlightMovementRange() {
+            const figure = gameState.board[gameState.selectedFigure];
+            const moveRange = characters[figure.type].move;
+            const validMoves = getValidMoves(gameState.selectedFigure, moveRange);
+            
+            validMoves.forEach(cellId => {
+                document.getElementById(cellId).classList.add('highlighted');
+            });
+        }
+
+        function getValidMoves(fromCell, moveRange) {
+            const validMoves = [];
+            const [fromCol, fromRow] = parseCell(fromCell);
+            
+            for (let row = 1; row <= 8; row++) {
+                for (let col = 1; col <= 8; col++) {
+                    const cellId = `${String.fromCharCode(64 + col)}${row}`;
+                    const distance = Math.abs(row - fromRow) + Math.abs(col - fromCol);
+                    
+                    if (distance <= moveRange && distance > 0 && isValidMoveTarget(cellId)) {
+                        validMoves.push(cellId);
+                    }
+                }
+            }
+            
+            return validMoves;
+        }
+
+        function isValidMoveTarget(cellId) {
+            return !gameState.board[cellId] && !terrainSquares.includes(cellId);
+        }
+
+        function handleMove(cellId) {
+            if (!isValidMoveTarget(cellId)) return;
+            
+            const figure = gameState.board[gameState.selectedFigure];
+            const moveRange = characters[figure.type].move;
+            const [fromCol, fromRow] = parseCell(gameState.selectedFigure);
+            const [toCol, toRow] = parseCell(cellId);
+            const distance = Math.abs(toRow - fromRow) + Math.abs(toCol - fromCol);
+            
+            if (distance <= moveRange) {
+                // Move the figure
+                gameState.board[cellId] = figure;
+                delete gameState.board[gameState.selectedFigure];
+                gameState.selectedFigure = cellId;
+                gameState.hasMoved = true;
+                
+                clearHighlights();
+                document.getElementById(cellId).classList.add('selected');
+                updateBoard();
+                updateActionButtons();
+            }
+        }
+
+        // Attack logic
+        function startAttack() {
+            if (!gameState.selectedFigure) return;
+            
+            gameState.selectedAction = 'attack';
+            highlightAttackRange();
+        }
+
+        function highlightAttackRange() {
+            const figure = gameState.board[gameState.selectedFigure];
+            const reach = characters[figure.type].reach;
+            const validTargets = getValidAttackTargets(gameState.selectedFigure, reach);
+            
+            validTargets.forEach(cellId => {
+                document.getElementById(cellId).classList.add('attack-range');
+            });
+        }
+
+        function getValidAttackTargets(fromCell, reach) {
+            const validTargets = [];
+            const [fromCol, fromRow] = parseCell(fromCell);
+            const figure = gameState.board[fromCell];
+            
+            for (let row = 1; row <= 8; row++) {
+                for (let col = 1; col <= 8; col++) {
+                    const cellId = `${String.fromCharCode(64 + col)}${row}`;
+                    const target = gameState.board[cellId];
+                    
+                    if (target && target.player !== figure.player) {
+                        const distance = Math.abs(row - fromRow) + Math.abs(col - fromCol);
+                        if (distance <= reach) {
+                            validTargets.push(cellId);
+                        }
+                    }
+                }
+            }
+            
+            return validTargets;
+        }
+
+        function handleAttack(cellId) {
+            const target = gameState.board[cellId];
+            if (!target || target.player === gameState.currentPlayer) return;
+            
+            const attacker = gameState.board[gameState.selectedFigure];
+            const reach = characters[attacker.type].reach;
+            const [fromCol, fromRow] = parseCell(gameState.selectedFigure);
+            const [toCol, toRow] = parseCell(cellId);
+            const distance = Math.abs(toRow - fromRow) + Math.abs(toCol - fromCol);
+            
+            if (distance <= reach) {
+                let damage = characters[attacker.type].attack;
+                
+                // Apply special damage modifiers
+                if (target.type === 'Barbarian' && attacker.type === 'Black Mage') {
+                    damage += 1; // Fear of the Occult
+                }
+                
+                target.health -= damage;
+                
+                if (target.health <= 0) {
+                    // Figure dies
+                    delete gameState.board[cellId];
+                    gameState.score[gameState.currentPlayer]++;
+                    
+                    // Check win condition
+                    if (gameState.score[gameState.currentPlayer] >= 4 || !hasLivingFigures(target.player)) {
+                        endGame(gameState.currentPlayer);
+                        return;
+                    }
+                }
+                
+                gameState.hasActed = true;
+                clearSelection();
+                updateBoard();
+                updateUI();
+            }
+        }
+
+        // Special actions
+        function startSpecialAction() {
+            const figure = gameState.board[gameState.selectedFigure];
+            if (!figure) return;
+            
+            switch (figure.type) {
+                case 'Knight':
+                    if (!gameState.hasMoved) {
+                        gameState.selectedAction = 'charge';
+                        highlightChargeRange();
+                    } else {
+                        alert("You can't use Charge after moving this turn");
+                    }
+                    break;
+                case 'Arbalist':
+                    gameState.selectedAction = 'longEye';
+                    highlightLongEyeRange();
+                    break;
+            }
+        }
+
+        function highlightChargeRange() {
+            const [fromCol, fromRow] = parseCell(gameState.selectedFigure);
+            
+            // Highlight straight lines up to 4 spaces
+            for (let direction of [[0,1], [0,-1], [1,0], [-1,0]]) {
+                for (let i = 1; i <= 4; i++) {
+                    const newRow = fromRow + (direction[1] * i);
+                    const newCol = fromCol + (direction[0] * i);
+                    
+                    if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
+                        const cellId = `${String.fromCharCode(64 + newCol)}${newRow}`;
+                        if (!terrainSquares.includes(cellId)) {
+                            document.getElementById(cellId).classList.add('highlighted');
+                        }
+                    }
+                }
+            }
+        }
+
+        function handleCharge(cellId) {
+            const [fromCol, fromRow] = parseCell(gameState.selectedFigure);
+            const [toCol, toRow] = parseCell(cellId);
+            
+            // Check if it's a straight line
+            const deltaRow = toRow - fromRow;
+            const deltaCol = toCol - fromCol;
+            
+            if (deltaRow !== 0 && deltaCol !== 0) return; // Not straight line
+            if (Math.abs(deltaRow) + Math.abs(deltaCol) > 4) return; // Too far
+            if (terrainSquares.includes(cellId)) return; // Can't move to terrain
+            if (gameState.board[cellId]) return; // Can't move to occupied cell
+            
+            // Execute charge
+            const figure = gameState.board[gameState.selectedFigure];
+            
+            // Damage figures along the path
+            const stepRow = deltaRow === 0 ? 0 : deltaRow / Math.abs(deltaRow);
+            const stepCol = deltaCol === 0 ? 0 : deltaCol / Math.abs(deltaCol);
+            
+            let currentRow = fromRow + stepRow;
+            let currentCol = fromCol + stepCol;
+            
+            while (currentRow !== toRow || currentCol !== toCol) {
+                const pathCellId = `${String.fromCharCode(64 + currentCol)}${currentRow}`;
+                const pathFigure = gameState.board[pathCellId];
+                
+                if (pathFigure) {
+                    pathFigure.health -= 2;
+                    if (pathFigure.health <= 0) {
+                        delete gameState.board[pathCellId];
+                        gameState.score[gameState.currentPlayer]++;
+                    }
+                }
+                
+                currentRow += stepRow;
+                currentCol += stepCol;
+            }
+            
+            // Move the knight
+            gameState.board[cellId] = figure;
+            delete gameState.board[gameState.selectedFigure];
+            gameState.selectedFigure = cellId;
+            gameState.hasActed = true;
+            
+            clearSelection();
+            updateBoard();
+            updateUI();
+            
+            // Check win conditions
+            checkWinConditions();
+        }
+
+        function highlightLongEyeRange() {
+            const [fromCol, fromRow] = parseCell(gameState.selectedFigure);
+            
+            // Highlight all directions (including diagonal)
+            for (let direction of [[0,1], [0,-1], [1,0], [-1,0], [1,1], [1,-1], [-1,1], [-1,-1]]) {
+                for (let i = 1; i <= 8; i++) {
+                    const newRow = fromRow + (direction[1] * i);
+                    const newCol = fromCol + (direction[0] * i);
+                    
+                    if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
+                        const cellId = `${String.fromCharCode(64 + newCol)}${newRow}`;
+                        const target = gameState.board[cellId];
+                        
+                        if (target) {
+                            if (target.player !== gameState.currentPlayer) {
+                                document.getElementById(cellId).classList.add('attack-range');
+                            }
+                            break; // Can't attack through figures
+                        }
+                        
+                        if (terrainSquares.includes(cellId)) {
+                            break; // Can't attack through terrain
+                        }
+                    }
+                }
+            }
+        }
+
+        function handleLongEye(cellId) {
+            const target = gameState.board[cellId];
+            if (!target || target.player === gameState.currentPlayer) return;
+            
+            const [fromCol, fromRow] = parseCell(gameState.selectedFigure);
+            const [toCol, toRow] = parseCell(cellId);
+            
+            // Check if it's in a straight line (including diagonal)
+            const deltaRow = toRow - fromRow;
+            const deltaCol = toCol - fromCol;
+            
+            if (deltaRow !== 0 && deltaCol !== 0 && Math.abs(deltaRow) !== Math.abs(deltaCol)) {
+                return; // Not straight line or diagonal
+            }
+            
+            // Check path is clear
+            const stepRow = deltaRow === 0 ? 0 : deltaRow / Math.abs(deltaRow);
+            const stepCol = deltaCol === 0 ? 0 : deltaCol / Math.abs(deltaCol);
+            
+            let currentRow = fromRow + stepRow;
+            let currentCol = fromCol + stepCol;
+            
+            while (currentRow !== toRow || currentCol !== toCol) {
+                const pathCellId = `${String.fromCharCode(64 + currentCol)}${currentRow}`;
+                if (gameState.board[pathCellId] || terrainSquares.includes(pathCellId)) {
+                    return; // Path blocked
+                }
+                currentRow += stepRow;
+                currentCol += stepCol;
+            }
+            
+            // Deal 1 damage
+            target.health -= 1;
+            
+            if (target.health <= 0) {
+                delete gameState.board[cellId];
+                gameState.score[gameState.currentPlayer]++;
+            }
+            
+            gameState.hasActed = true;
+            clearSelection();
+            updateBoard();
+            updateUI();
+            checkWinConditions();
+        }
+
+        // Spell system
+        function openSpellModal() {
+            const figure = gameState.board[gameState.selectedFigure];
+            if (!figure || !isSpellcaster(figure.type)) return;
+            
+            const spellGrid = document.getElementById('spellGrid');
+            spellGrid.innerHTML = '';
+            
+            const spells = getSpellsForCharacter(figure.type);
+            
+            spells.forEach(spell => {
+                const spellCard = document.createElement('div');
+                spellCard.className = 'spell-card';
+                spellCard.onclick = () => selectSpell(spell.name);
+                
+                spellCard.innerHTML = `
+                    <h4>${spell.name}</h4>
+                    <p>${spell.description}</p>
+                `;
+                
+                spellGrid.appendChild(spellCard);
+            });
+            
+            document.getElementById('spellModal').style.display = 'flex';
+        }
+
+        function getSpellsForCharacter(type) {
+            const spells = {
+                'Black Mage': [
+                    {
+                        name: 'Magic Bomb',
+                        description: 'Place bomb within reach. All figures in that space and adjacent spaces lose 2 life. Once per game.',
+                        canUse: () => !gameState.usedSpells?.includes('Magic Bomb')
+                    },
+                    {
+                        name: 'Curse',
+                        description: 'Lose X life. One enemy within reach loses X+1 life.',
+                        canUse: () => true
+                    },
+                    {
+                        name: 'Animate Dead',
+                        description: 'Lose 1 life. Resurrect one dead figure in your start zone with 2 life.',
+                        canUse: () => true
+                    }
+                ],
+                'White Mage': [
+                    {
+                        name: 'Convert',
+                        description: 'Take control of an enemy figure with 2 or less life within reach.',
+                        canUse: () => true
+                    },
+                    {
+                        name: 'Heal',
+                        description: 'One figure within reach gains up to 3 life (max starting life).',
+                        canUse: () => true
+                    },
+                    {
+                        name: 'Conjure Containment',
+                        description: 'One enemy within reach cannot move, attack or use special actions for 2 turns.',
+                        canUse: () => true
+                    }
+                ]
+            };
+            
+            return spells[type] || [];
+        }
+
+        function selectSpell(spellName) {
+            gameState.selectedAction = `spell_${spellName}`;
+            closeSpellModal();
+            
+            switch (spellName) {
+                case 'Magic Bomb':
+                    highlightSpellRange(2);
+                    break;
+                case 'Curse':
+                    highlightEnemiesInRange(2);
+                    break;
+                case 'Animate Dead':
+                    handleAnimateDead();
+                    break;
+                case 'Convert':
+                    highlightConvertTargets();
+                    break;
+                case 'Heal':
+                    highlightHealTargets();
+                    break;
+                case 'Conjure Containment':
+                    highlightEnemiesInRange(2);
+                    break;
+            }
+        }
+
+        function highlightSpellRange(reach) {
+            const [fromCol, fromRow] = parseCell(gameState.selectedFigure);
+            
+            for (let row = 1; row <= 8; row++) {
+                for (let col = 1; col <= 8; col++) {
+                    const distance = Math.abs(row - fromRow) + Math.abs(col - fromCol);
+                    if (distance <= reach) {
+                        const cellId = `${String.fromCharCode(64 + col)}${row}`;
+                        document.getElementById(cellId).classList.add('highlighted');
+                    }
+                }
+            }
+        }
+
+        function highlightEnemiesInRange(reach) {
+            const [fromCol, fromRow] = parseCell(gameState.selectedFigure);
+            
+            for (let row = 1; row <= 8; row++) {
+                for (let col = 1; col <= 8; col++) {
+                    const cellId = `${String.fromCharCode(64 + col)}${row}`;
+                    const target = gameState.board[cellId];
+                    const distance = Math.abs(row - fromRow) + Math.abs(col - fromCol);
+                    
+                    if (target && target.player !== gameState.currentPlayer && distance <= reach) {
+                        document.getElementById(cellId).classList.add('attack-range');
+                    }
+                }
+            }
+        }
+
+        function highlightConvertTargets() {
+            const [fromCol, fromRow] = parseCell(gameState.selectedFigure);
+            
+            for (let row = 1; row <= 8; row++) {
+                for (let col = 1; col <= 8; col++) {
+                    const cellId = `${String.fromCharCode(64 + col)}${row}`;
+                    const target = gameState.board[cellId];
+                    const distance = Math.abs(row - fromRow) + Math.abs(col - fromCol);
+                    
+                    if (target && target.player !== gameState.currentPlayer && target.health <= 2 && distance <= 2) {
+                        document.getElementById(cellId).classList.add('attack-range');
+                    }
+                }
+            }
+        }
+
+        function highlightHealTargets() {
+            const [fromCol, fromRow] = parseCell(gameState.selectedFigure);
+            
+            for (let row = 1; row <= 8; row++) {
+                for (let col = 1; col <= 8; col++) {
+                    const cellId = `${String.fromCharCode(64 + col)}${row}`;
+                    const target = gameState.board[cellId];
+                    const distance = Math.abs(row - fromRow) + Math.abs(col - fromCol);
+                    
+                    if (target && target.player === gameState.currentPlayer && distance <= 2) {
+                        document.getElementById(cellId).classList.add('highlighted');
+                    }
+                }
+            }
+        }
+
+        function handleSpellTarget(cellId) {
+            const spellName = gameState.selectedAction.replace('spell_', '');
+            
+            switch (spellName) {
+                case 'Magic Bomb':
+                    handleMagicBomb(cellId);
+                    break;
+                case 'Curse':
+                    handleCurse(cellId);
+                    break;
+                case 'Convert':
+                    handleConvert(cellId);
+                    break;
+                case 'Heal':
+                    handleHeal(cellId);
+                    break;
+                case 'Conjure Containment':
+                    handleContainment(cellId);
+                    break;
+            }
+        }
+
+        function handleMagicBomb(cellId) {
+            if (!gameState.usedSpells) gameState.usedSpells = [];
+            if (gameState.usedSpells.includes('Magic Bomb')) return;
+            
+            const caster = gameState.board[gameState.selectedFigure];
+            const [fromCol, fromRow] = parseCell(gameState.selectedFigure);
+            const [toCol, toRow] = parseCell(cellId);
+            const distance = Math.abs(toRow - fromRow) + Math.abs(toCol - fromCol);
+            
+            if (distance <= 2) {
+                gameState.usedSpells.push('Magic Bomb');
+                
+                // Damage all figures in target cell and adjacent cells
+                for (let row = toRow - 1; row <= toRow + 1; row++) {
+                    for (let col = toCol - 1; col <= toCol + 1; col++) {
+                        if (row >= 1 && row <= 8 && col >= 1 && col <= 8) {
+                            const targetCell = `${String.fromCharCode(64 + col)}${row}`;
+                            const target = gameState.board[targetCell];
+                            
+                            if (target) {
+                                target.health -= 2;
+                                if (target.health <= 0) {
+                                    delete gameState.board[targetCell];
+                                    if (target.player !== gameState.currentPlayer) {
+                                        gameState.score[gameState.currentPlayer]++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                gameState.hasActed = true;
+                clearSelection();
+                updateBoard();
+                updateUI();
+                checkWinConditions();
+            }
+        }
+
+        function handleCurse(cellId) {
+            const target = gameState.board[cellId];
+            const caster = gameState.board[gameState.selectedFigure];
+            
+            if (!target || target.player === gameState.currentPlayer) return;
+            
+            const [fromCol, fromRow] = parseCell(gameState.selectedFigure);
+            const [toCol, toRow] = parseCell(cellId);
+            const distance = Math.abs(toRow - fromRow) + Math.abs(toCol - fromCol);
+            
+            if (distance <= 2) {
+                const damage = parseInt(prompt('How much life do you want to lose? (X)') || '0');
+                if (damage > 0 && damage <= caster.health) {
+                    caster.health -= damage;
+                    target.health -= (damage + 1);
+                    
+                    if (caster.health <= 0) {
+                        delete gameState.board[gameState.selectedFigure];
+                    }
+                    
+                    if (target.health <= 0) {
+                        delete gameState.board[cellId];
+                        gameState.score[gameState.currentPlayer]++;
+                    }
+                    
+                    gameState.hasActed = true;
+                    clearSelection();
+                    updateBoard();
+                    updateUI();
+                    checkWinConditions();
+                }
+            }
+        }
+
+        function handleAnimateDead() {
+            const caster = gameState.board[gameState.selectedFigure];
+            caster.health -= 1;
+            
+            if (caster.health <= 0) {
+                delete gameState.board[gameState.selectedFigure];
+            }
+            
+            // Show available dead characters
+            const deadCharacters = ['Knight', 'Barbarian', 'Arbalist', 'Black Mage', 'White Mage']
+                .filter(type => !Object.values(gameState.board).some(fig => fig.type === type && fig.player === gameState.currentPlayer));
+            
+            if (deadCharacters.length > 0) {
+                const choice = prompt(`Choose character to resurrect: ${deadCharacters.join(', ')}`);
+                if (deadCharacters.includes(choice)) {
+                    // Find empty spot in start zone
+                    const startZone = deploymentZones[gameState.currentPlayer];
+                    const emptySpot = startZone.find(cellId => !gameState.board[cellId]);
+                    
+                    if (emptySpot) {
+                        gameState.board[emptySpot] = {
+                            type: choice,
+                            player: gameState.currentPlayer,
+                            health: 2,
+                            maxHealth: characters[choice].health,
+                            id: `${gameState.currentPlayer}_${choice}_revived`
+                        };
+                    }
+                }
+            }
+            
+            gameState.hasActed = true;
+            clearSelection();
+            updateBoard();
+            updateUI();
+        }
+
+        function handleConvert(cellId) {
+            const target = gameState.board[cellId];
+            const caster = gameState.board[gameState.selectedFigure];
+            
+            if (!target || target.player === gameState.currentPlayer || target.health > 2) return;
+            
+            const [fromCol, fromRow] = parseCell(gameState.selectedFigure);
+            const [toCol, toRow] = parseCell(cellId);
+            const distance = Math.abs(toRow - fromRow) + Math.abs(toCol - fromCol);
+            
+            if (distance <= 2) {
+                target.player = gameState.currentPlayer;
+                target.id = `${gameState.currentPlayer}_${target.type}_converted`;
+                
+                gameState.hasActed = true;
+                clearSelection();
+                updateBoard();
+                updateUI();
+            }
+        }
+
+        function handleHeal(cellId) {
+            const target = gameState.board[cellId];
+            const caster = gameState.board[gameState.selectedFigure];
+            
+            if (!target || target.player !== gameState.currentPlayer) return;
+            
+            const [fromCol, fromRow] = parseCell(gameState.selectedFigure);
+            const [toCol, toRow] = parseCell(cellId);
+            const distance = Math.abs(toRow - fromRow) + Math.abs(toCol - fromCol);
+            
+            if (distance <= 2) {
+                const healing = Math.min(3, target.maxHealth - target.health);
+                target.health += healing;
+                
+                gameState.hasActed = true;
+                clearSelection();
+                updateBoard();
+                updateUI();
+            }
+        }
+
+        function handleContainment(cellId) {
+            const target = gameState.board[cellId];
+            const caster = gameState.board[gameState.selectedFigure];
+            
+            if (!target || target.player === gameState.currentPlayer) return;
+            
+            const [fromCol, fromRow] = parseCell(gameState.selectedFigure);
+            const [toCol, toRow] = parseCell(cellId);
+            const distance = Math.abs(toRow - fromRow) + Math.abs(toCol - fromCol);
+            
+            if (distance <= 2) {
+                gameState.statusEffects.push({
+                    type: 'contained',
+                    targetId: target.id,
+                    cellId: cellId,
+                    turnsLeft: 2
+                });
+                
+                gameState.hasActed = true;
+                clearSelection();
+                updateBoard();
+                updateUI();
+            }
+        }
+
+        function closeSpellModal() {
+            document.getElementById('spellModal').style.display = 'none';
+        }
+
+        // End turn logic
+        function endTurn() {
+            // Update status effects
+            gameState.statusEffects = gameState.statusEffects.filter(effect => {
+                effect.turnsLeft--;
+                return effect.turnsLeft > 0;
+            });
+            
+            // Switch players
+            gameState.currentPlayer = gameState.currentPlayer === 'A' ? 'B' : 'A';
+            gameState.turnCount++;
+            gameState.hasMoved = false;
+            gameState.hasActed = false;
+            
+            clearSelection();
+            updateUI();
+        }
+
+        // Utility functions
+        function parseCell(cellId) {
+            const col = cellId.charCodeAt(0) - 64; // A=1, B=2, etc.
+            const row = parseInt(cellId.slice(1));
+            return [col, row];
+        }
+
+        function hasLivingFigures(player) {
+            return Object.values(gameState.board).some(fig => fig.player === player);
+        }
+
+        function checkWinConditions() {
+            if (gameState.score.A >= 4) {
+                endGame('A');
+            } else if (gameState.score.B >= 4) {
+                endGame('B');
+            } else if (!hasLivingFigures('A')) {
+                endGame('B');
+            } else if (!hasLivingFigures('B')) {
+                endGame('A');
+            }
+        }
+
+        function endGame(winner) {
+            gameState.phase = 'ended';
+            alert(`Player ${winner} wins!`);
+        }
+
+        function updateBoard() {
+            // Clear all figures
+            document.querySelectorAll('.figure').forEach(fig => fig.remove());
+            
+            // Place all figures
+            Object.entries(gameState.board).forEach(([cellId, figure]) => {
+                const cell = document.getElementById(cellId);
+                const figureDiv = document.createElement('div');
+                figureDiv.className = `figure player-${figure.player.toLowerCase()}`;
+                
+                const char = characters[figure.type];
+                figureDiv.innerHTML = `
+                    ${char.symbol}
+                    <div class="health">${figure.health}</div>
+                `;
+                
+                cell.appendChild(figureDiv);
+            });
+        }
+
+        function updateUI() {
+            // Update turn indicator
+            const turnIndicator = document.getElementById('turnIndicator');
+            turnIndicator.textContent = `Player ${gameState.currentPlayer}'s Turn`;
+            turnIndicator.className = `turn-indicator turn-player-${gameState.currentPlayer.toLowerCase()}`;
+            
+            // Update scores
+            document.getElementById('scoreA').textContent = gameState.score.A;
+            document.getElementById('scoreB').textContent = gameState.score.B;
+            document.getElementById('turnCounter').textContent = gameState.turnCount;
+            
+            // Update status effects
+            updateStatusEffects();
+            
+            updateBoard();
+        }
+
+        function updateStatusEffects() {
+            const statusDiv = document.getElementById('statusEffects');
+            const effectsList = document.getElementById('effectsList');
+            
+            if (gameState.statusEffects.length > 0) {
+                statusDiv.style.display = 'block';
+                effectsList.innerHTML = gameState.statusEffects.map(effect => {
+                    const figure = gameState.board[effect.cellId];
+                    return `${figure?.type || 'Unknown'} is ${effect.type} for ${effect.turnsLeft} more turns`;
+                }).join('<br>');
+            } else {
+                statusDiv.style.display = 'none';
+            }
+        }
+
+        // Event listeners
+        document.getElementById('moveBtn').onclick = startMove;
+        document.getElementById('attackBtn').onclick = startAttack;
+        document.getElementById('specialBtn').onclick = startSpecialAction;
+        document.getElementById('spellBtn').onclick = openSpellModal;
+        document.getElementById('endTurnBtn').onclick = endTurn;
+
+        // Initialize the game
+        initGame();
+    </script>
 </body>
-
 </html>
