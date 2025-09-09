@@ -555,7 +555,11 @@
             const index = gameState.setupPhase.charactersToPlace[gameState.setupPhase.currentPlayer].indexOf(selectedCharacterForPlacement);
             gameState.setupPhase.charactersToPlace[gameState.setupPhase.currentPlayer].splice(index, 1);
 
+            // Clear selection
             selectedCharacterForPlacement = null;
+            document.querySelectorAll('.character-card').forEach(card => {
+                card.classList.remove('placing');
+            });
 
             // Check if current player is done
             if (gameState.setupPhase.charactersToPlace[gameState.setupPhase.currentPlayer].length === 0) {
@@ -563,14 +567,20 @@
                     // Switch to player B
                     gameState.setupPhase.currentPlayer = 'B';
                     document.getElementById('setupInstructions').textContent = 'Player B: Place your characters';
+                    setupCharacterSelection();
                 } else {
                     // Setup complete
                     startGame();
                     return;
                 }
+            } else {
+                // Update instruction for remaining placements
+                const remaining = gameState.setupPhase.charactersToPlace[gameState.setupPhase.currentPlayer].length;
+                document.getElementById('setupInstructions').textContent = 
+                    `Player ${gameState.setupPhase.currentPlayer}: Select a character to place (${remaining} remaining)`;
+                setupCharacterSelection();
             }
 
-            setupCharacterSelection();
             updateBoard();
         }
 
