@@ -615,13 +615,21 @@
   };
 
   // ================= Storage =================
+  // window.storage only exists inside the Claude.ai artifact sandbox. When
+  // this file is hosted anywhere else (e.g. GitHub Pages), we fall back to
+  // the browser's own localStorage — no server or database needed, since
+  // this is single-user, single-device data.
   async function loadState(){
     try{
       if (window.storage){
         const res = await window.storage.get(STORAGE_KEY);
         if (res && res.value){
-          const parsed = JSON.parse(res.value);
-          state = Object.assign(state, parsed);
+          state = Object.assign(state, JSON.parse(res.value));
+        }
+      } else if (window.localStorage){
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw){
+          state = Object.assign(state, JSON.parse(raw));
         }
       }
     }catch(e){ /* no saved state yet, or storage unavailable — use defaults */ }
@@ -633,6 +641,8 @@
     try{
       if (window.storage){
         await window.storage.set(STORAGE_KEY, JSON.stringify(state));
+      } else if (window.localStorage){
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       }
     }catch(e){ /* ignore — app still works without persistence */ }
   }
