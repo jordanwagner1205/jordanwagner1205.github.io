@@ -197,6 +197,7 @@
   .answer.meaning{ color: var(--event); font-size: 1.9rem; }
   .answer.thread-pick{ color: var(--gold); font-size: 1.5rem; }
   .answer.character-pick{ color: var(--event); font-size: 1.5rem; }
+  .answer.npc-title{ color: var(--gold); }
   .thresholds{
     font-size: 0.78rem;
     color: var(--faint);
@@ -313,21 +314,25 @@
     display:flex;
     flex-direction: column;
     gap: 6px;
-    max-height: 200px;
+    max-height: 280px;
     overflow-y: auto;
   }
-  .item-row{
-    display:flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+  .item-block{
     background: var(--panel);
     border: 1px solid var(--line);
     border-radius: var(--radius);
     padding: 8px 10px;
-    font-size: 0.85rem;
   }
-  .item-text{ color: var(--text); }
+  .item-header{
+    display:flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .item-text{ color: var(--text); flex:1; }
+  .item-note-dot{ color: var(--gold); font-size: 0.6rem; margin-right: 4px; vertical-align: middle; }
   .item-remove{
     background: none;
     border: none;
@@ -339,6 +344,20 @@
     flex-shrink: 0;
   }
   .item-remove:hover{ color: var(--no); }
+  .item-notes{ margin-top: 8px; }
+  .item-notes textarea{
+    width: 100%;
+    min-height: 60px;
+    background: var(--bg-alt);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    padding: 8px;
+    resize: vertical;
+  }
+  .item-notes textarea::placeholder{ color: var(--faint); }
 
   .subsection-note{
     font-size: 0.76rem;
@@ -367,8 +386,9 @@
 
   <div class="tabbar">
     <button class="tab-btn" data-tab="fate">Fate Chart</button>
-    <button class="tab-btn" data-tab="meaning">Event Meaning</button>
-    <button class="tab-btn" data-tab="lists">Adventure Lists</button>
+    <button class="tab-btn" data-tab="meaning">Meaning</button>
+    <button class="tab-btn" data-tab="lists">Lists</button>
+    <button class="tab-btn" data-tab="npc">NPCs</button>
   </div>
 
   <!-- ===================== FATE CHART TAB ===================== -->
@@ -444,6 +464,7 @@
         <span class="label">Threads</span>
         <span class="label-value" id="threadsCount">0/25</span>
       </div>
+      <div class="subsection-note">Tap an entry to add notes.</div>
       <div class="add-row">
         <input type="text" id="threadsInput" placeholder="Add a thread…" maxlength="140">
         <button class="add-btn" id="threadsAddBtn">Add</button>
@@ -453,6 +474,7 @@
       <div class="result" id="threadsResultBox">
         <div class="roll-die" id="threadsRollDie">—</div>
         <div class="answer thread-pick" id="threadsAnswerText">—</div>
+        <div class="thresholds" id="threadsNotesText" style="white-space:pre-wrap;"></div>
       </div>
       <ul class="log-list compact" id="threadsLogList" style="margin-top:14px;"></ul>
     </section>
@@ -462,6 +484,7 @@
         <span class="label">Characters</span>
         <span class="label-value" id="charactersCount">0/25</span>
       </div>
+      <div class="subsection-note">Tap an entry to add notes.</div>
       <div class="add-row">
         <input type="text" id="charactersInput" placeholder="Add a character…" maxlength="140">
         <button class="add-btn" id="charactersAddBtn">Add</button>
@@ -471,14 +494,75 @@
       <div class="result" id="charactersResultBox">
         <div class="roll-die" id="charactersRollDie">—</div>
         <div class="answer character-pick" id="charactersAnswerText">—</div>
+        <div class="thresholds" id="charactersNotesText" style="white-space:pre-wrap;"></div>
       </div>
       <ul class="log-list compact" id="charactersLogList" style="margin-top:14px;"></ul>
     </section>
 
   </div>
 
+  <!-- ===================== NPC (ÜNE) TAB ===================== -->
+  <div class="tab-panel" id="panel-npc" hidden>
+
+    <section>
+      <div class="label-row"><span class="label">NPC Creator</span></div>
+      <div class="subsection-note">Rolls a title, power level, and three motivations.</div>
+      <div class="label-row">
+        <span class="label">Scene R-level</span>
+        <span class="label-value" id="rLevelValue">3</span>
+      </div>
+      <div class="chaos-row" id="rLevelRow"></div>
+      <button class="roll-btn" id="npcCreateBtn" style="margin-top:16px;">Create NPC</button>
+      <div class="result" id="npcResultBox">
+        <div class="roll-die" id="npcRollDie">—</div>
+        <div class="answer npc-title" id="npcTitleText">—</div>
+        <div class="thresholds" id="npcPowerText"></div>
+        <div class="event-box none" id="npcMotivationsBox">
+          <div class="event-title" id="npcMotivationsTitle">Motivations</div>
+          <div class="event-detail" id="npcMotivationsText"></div>
+        </div>
+        <button class="jump-btn" id="npcAddToCharsBtn" style="margin-top:10px;">Add to Characters list →</button>
+        <div class="subsection-note" id="npcAddFeedback" style="margin-top:6px; margin-bottom:0;"></div>
+      </div>
+      <ul class="log-list compact" id="npcLogList" style="margin-top:14px;"></ul>
+      <button class="clear-btn" id="npcClearBtn">Clear log</button>
+    </section>
+
+    <section>
+      <div class="label-row"><span class="label">NPC Response</span></div>
+      <div class="subsection-note">A yes/no answer, weighted by relationship and mood.</div>
+      <div class="label-row"><span class="label">Relationship</span></div>
+      <div class="pills" id="relationshipPills"></div>
+      <div class="label-row" style="margin-top:14px;"><span class="label">Conversation mood</span></div>
+      <div class="pills" id="moodPills"></div>
+      <button class="roll-btn" id="responseRollBtn" style="margin-top:16px;">Get response</button>
+      <div class="result" id="responseResultBox">
+        <div class="roll-die">Rolled <b id="responseRollValue">—</b> on d100</div>
+        <div class="answer" id="responseAnswerText">—</div>
+        <div class="thresholds" id="responseThresholdText"></div>
+      </div>
+      <ul class="log-list compact" id="responseLogList" style="margin-top:14px;"></ul>
+      <button class="clear-btn" id="responseClearBtn">Clear log</button>
+    </section>
+
+    <section>
+      <div class="label-row"><span class="label">NPC Discussion</span></div>
+      <div class="subsection-note">Find what an NPC wants to talk about.</div>
+      <div class="label-row"><span class="label">Demeanor</span></div>
+      <div class="pills" id="demeanorPills"></div>
+      <button class="roll-btn" id="discussionRollBtn" style="margin-top:16px;">Roll discussion topic</button>
+      <div class="result" id="discussionResultBox">
+        <div class="roll-die" id="discussionRollDie">—</div>
+        <div class="answer meaning" id="discussionAnswerText">—</div>
+      </div>
+      <ul class="log-list compact" id="discussionLogList" style="margin-top:14px;"></ul>
+      <button class="clear-btn" id="discussionClearBtn">Clear log</button>
+    </section>
+
+  </div>
+
   <footer>
-    Fate Chart odds/thresholds, the Random Event Focus Table, the Actions &amp; Descriptions Meaning Tables, and the Adventure Lists selection method all follow the Mythic GM Emulator, 2nd Edition.<br>
+    Fate Chart odds/thresholds, the Random Event Focus Table, the Actions &amp; Descriptions Meaning Tables, and the Adventure Lists selection method all follow the Mythic GM Emulator, 2nd Edition. The NPC tab implements ÜNE: The Üniversal NPC Emulator, by Zach Best (Conjecture Games).<br>
     Each List holds up to 25 entries in 5 sections of 5; rolling can land on an empty slot ("Choose") when a section isn't full yet — that's expected, not a bug.
   </footer>
 
@@ -596,6 +680,141 @@
     characters: { pickClass: "character-pick", placeholder: "Add a character…" }
   };
 
+  // ================= NPC CREATOR (ÜNE) DATA =================
+  // Chart 1: NPC Modifier, d100.
+  const NPC_MODIFIER = [
+    "superfluous","addicted","conformist","nefarious","sensible","untrained","romantic","unreasonable","skilled","neglectful",
+    "lively","forthright","idealistic","unsupportive","rational","coarse","foolish","cunning","delightful","miserly",
+    "inept","banal","logical","subtle","reputable","wicked","lazy","pessimistic","solemn","habitual",
+    "meek","helpful","unconcerned","generous","docile","cheery","pragmatic","serene","thoughtful","hopeless",
+    "pleasant","insensitive","titled","inexperienced","prying","oblivious","refined","indispensable","scholarly","conservative",
+    "uncouth","willful","indifferent","fickle","elderly","sinful","naive","privileged","glum","likable",
+    "lethargic","defiant","obnoxious","insightful","tactless","fanatic","plebeian","childish","pious","uneducated",
+    "inconsiderate","cultured","revolting","curious","touchy","needy","dignified","pushy","kind","corrupt",
+    "jovial","shrewd","liberal","compliant","destitute","conniving","careful","alluring","defective","optimistic",
+    "affluent","despondent","mindless","passionate","devoted","established","unseemly","dependable","righteous","confident"
+  ];
+  // Chart 2: NPC Noun, d100.
+  const NPC_NOUN = [
+    "gypsy","witch","merchant","expert","commoner","judge","ranger","occultist","reverend","thug",
+    "drifter","journeyman","statesman","astrologer","duelist","jack-of-all-trades","aristocrat","preacher","artisan","rogue",
+    "missionary","outcast","mercenary","caretaker","hermit","orator","chieftain","pioneer","burglar","vicar",
+    "officer","explorer","warden","outlaw","adept","bum","sorcerer","laborer","master","ascendant",
+    "villager","magus","conscript","worker","actor","herald","highwayman","fortune-hunter","governor","scrapper",
+    "monk","homemaker","recluse","steward","polymath","magician","traveler","vagrant","apprentice","politician",
+    "mediator","crook","civilian","activist","hero","champion","cleric","slave","gunman","clairvoyant",
+    "patriarch","shopkeeper","crone","adventurer","soldier","entertainer","craftsman","scientist","ascetic","superior",
+    "performer","magister","serf","brute","inquisitor","lord","villain","professor","servant","charmer",
+    "globetrotter","sniper","courtier","priest","tradesman","hitman","wizard","beggar","tradesman","warrior"
+  ];
+  // Chart 3: NPC Power Level. Cumulative upper-bound thresholds per R-level (1-5)
+  // for [Much Weaker, Slightly Weaker, Comparable, Slightly Stronger, Much Stronger].
+  // The book's row 1 has a one-point printed overlap between Comparable/Slightly
+  // Stronger (11-90 vs 89-98); resolved here the same way the rest of this app
+  // reads charts — first threshold met, in order — same fix used for the Fate Chart.
+  const POWER_THRESHOLDS = {
+    1: [2,10,90,98,100],
+    2: [4,15,85,96,100],
+    3: [5,20,80,95,100],
+    4: [8,25,75,92,100],
+    5: [12,30,70,88,100]
+  };
+  const POWER_LABELS = ["Much Weaker","Slightly Weaker","Comparable","Slightly Stronger","Much Stronger"];
+  function evaluatePower(rLevel, roll){
+    const thresholds = POWER_THRESHOLDS[rLevel];
+    for (let i=0;i<thresholds.length;i++){
+      if (roll <= thresholds[i]) return POWER_LABELS[i];
+    }
+    return POWER_LABELS[POWER_LABELS.length-1];
+  }
+  // Chart 4: NPC Motivation Verb, d100.
+  const MOTIVATION_VERB = [
+    "advise","obtain","attempt","spoil","oppress","interact","create","abduct","promote","conceive",
+    "blight","progress","distress","possess","record","embrace","contact","pursue","associate","prepare",
+    "shepherd","abuse","indulge","chronicle","fulfill","drive","review","aid","follow","advance",
+    "guard","conquer","hinder","plunder","construct","encourage","agonize","comprehend","administer","relate",
+    "take","discover","deter","acquire","damage","publicize","burden","advocate","implement","understand",
+    "collaborate","strive","complete","compel","join","assist","defile","produce","institute","account",
+    "work","accompany","offend","guide","learn","persecute","communicate","process","report","develop",
+    "steal","suggest","weaken","achieve","secure","inform","patronize","depress","determine","seek",
+    "manage","suppress","proclaim","operate","access","refine","compose","undermine","explain","discourage",
+    "attend","detect","execute","maintain","realize","convey","rob","establish","overthrow","support"
+  ];
+  // Chart 5: NPC Motivation Noun, d100. Columns are 1-20/21-40/41-60/61-80/81-100;
+  // rerolling only this Noun (never the Verb) if it lands in the same column as
+  // any of this NPC's already-accepted Motivation Nouns.
+  const MOTIVATION_NOUN = [
+    "wealth","hardship","affluence","resources","prosperity","poverty","opulence","deprivation","success","distress",
+    "contraband","music","literature","technology","alcohol","medicines","beauty","strength","intelligence","force",
+    "the wealthy","the populous","enemies","the public","religion","the poor","family","the elite","academia","the forsaken",
+    "the law","the government","the downtrodden","friends","criminals","allies","secret societies","the world","military","the church",
+    "dreams","discretion","love","freedom","pain","faith","slavery","enlightenment","racism","sensuality",
+    "dissonance","peace","discrimination","disbelief","pleasure","hate","happiness","servitude","harmony","justice",
+    "gluttony","lust","envy","greed","laziness","wrath","pride","purity","moderation","vigilance",
+    "zeal","composure","charity","modesty","atrocities","cowardice","narcissism","compassion","valor","patience",
+    "advice","propaganda","science","knowledge","communications","lies","myths","riddles","stories","legends",
+    "industry","new religions","progress","animals","ghosts","magic","nature","old religions","expertise","spirits"
+  ];
+  function motivationColumn(roll){ return Math.floor((roll-1)/20); }
+  function titleCase(s){ return s.replace(/\b\w/g, c => c.toUpperCase()); }
+
+  // Chart 6: NPC Binary Response. [very-affirmative max, affirmative max, negative max]
+  // for each Relationship (row) × Conversation Mood (column).
+  const RELATIONSHIPS = ["loved","friendly","peaceful","neutral","distrustful","hostile","hated"];
+  const MOODS = ["withdrawn","guarded","cautious","neutral","sociable","helpful","forthcoming"];
+  const RESPONSE_CHART = {
+    loved:       [[5,30,87],[9,45,90],[12,60,93],[15,75,95],[18,81,96],[21,88,97],[25,95,99]],
+    friendly:    [[4,25,85],[8,38,88],[10,51,91],[13,64,93],[16,73,94],[19,82,96],[23,91,98]],
+    peaceful:    [[4,21,83],[7,33,86],[9,45,89],[11,56,91],[14,65,93],[17,76,95],[21,87,98]],
+    neutral:     [[3,17,81],[6,28,84],[8,39,87],[10,50,90],[13,61,92],[16,72,94],[19,83,97]],
+    distrustful: [[2,13,79],[5,24,83],[7,35,86],[9,44,89],[11,55,91],[14,67,93],[17,79,96]],
+    hostile:     [[2,9,77],[4,18,81],[6,27,84],[7,36,87],[9,49,90],[12,62,92],[15,75,96]],
+    hated:       [[1,5,75],[3,12,79],[4,19,82],[5,25,85],[7,40,88],[10,55,91],[13,70,95]]
+  };
+  function evaluateResponse(relationship, mood, roll){
+    const moodIdx = MOODS.indexOf(mood);
+    const [veryAff, aff, neg] = RESPONSE_CHART[relationship][moodIdx];
+    if (roll <= veryAff) return "Very Affirmative";
+    if (roll <= aff) return "Affirmative";
+    if (roll <= neg) return "Negative";
+    return "Very Negative";
+  }
+
+  // Chart 7: NPC Bearing. 8 demeanors (d100 range or d8 index), each with 10
+  // Bearing words (d10 index).
+  const DEMEANORS = [
+    { name: "Scheming",    min: 1,   max: 12,  words: ["intent","bargain","means","proposition","plan","compromise","agenda","arrangement","negotiation","plot"] },
+    { name: "Insane",      min: 13,  max: 24,  words: ["madness","fear","accident","chaos","idiocy","illusion","turmoil","confusion","façade","bewilderment"] },
+    { name: "Friendly",    min: 25,  max: 36,  words: ["alliance","comfort","gratitude","shelter","happiness","support","promise","delight","aid","celebration"] },
+    { name: "Hostile",     min: 37,  max: 49,  words: ["death","capture","judgment","combat","surrender","rage","resentment","submission","injury","destruction"] },
+    { name: "Inquisitive", min: 50,  max: 62,  words: ["questions","investigation","interest","demand","suspicion","request","curiosity","skepticism","command","petition"] },
+    { name: "Knowing",     min: 63,  max: 75,  words: ["report","effects","examination","records","account","news","history","telling","discourse","speech"] },
+    { name: "Mysterious",  min: 76,  max: 88,  words: ["rumor","uncertainty","secrets","misdirection","whispers","lies","shadows","enigma","obscurity","conundrum"] },
+    { name: "Prejudiced",  min: 89,  max: 100, words: ["reputation","doubt","bias","dislike","partiality","belief","view","discrimination","assessment","difference"] }
+  ];
+  const DEMEANOR_NAMES = ["Random", ...DEMEANORS.map(d => d.name)];
+  function getDemeanorByRoll(roll){ return DEMEANORS.find(d => roll >= d.min && roll <= d.max); }
+  function getDemeanorByName(name){ return DEMEANORS.find(d => d.name === name); }
+
+  // Chart 8: NPC Focus, d100.
+  const NPC_FOCUS_TABLE = [
+    { max: 3,   label: "current scene" },   { max: 6,   label: "last story" },     { max: 9,   label: "equipment" },
+    { max: 12,  label: "parents" },         { max: 15,  label: "history" },        { max: 18,  label: "retainers" },
+    { max: 21,  label: "wealth" },          { max: 24,  label: "relics" },         { max: 27,  label: "last action" },
+    { max: 30,  label: "skills" },          { max: 33,  label: "superiors" },      { max: 36,  label: "fame" },
+    { max: 39,  label: "campaign" },        { max: 42,  label: "future action" },  { max: 45,  label: "friends" },
+    { max: 48,  label: "allies" },          { max: 51,  label: "last scene" },     { max: 54,  label: "contacts" },
+    { max: 57,  label: "flaws" },           { max: 60,  label: "antagonist" },     { max: 63,  label: "rewards" },
+    { max: 66,  label: "experience" },      { max: 69,  label: "knowledge" },      { max: 72,  label: "recent scene" },
+    { max: 75,  label: "community" },       { max: 78,  label: "treasure" },       { max: 81,  label: "the character" },
+    { max: 84,  label: "current story" },   { max: 87,  label: "family" },         { max: 90,  label: "power" },
+    { max: 93,  label: "weapons" },         { max: 96,  label: "previous scene" }, { max: 100, label: "enemy" }
+  ];
+  function getFocus(roll){
+    for (const row of NPC_FOCUS_TABLE){ if (roll <= row.max) return row.label; }
+    return NPC_FOCUS_TABLE[NPC_FOCUS_TABLE.length-1].label;
+  }
+
   const STORAGE_KEY = "fate-chart-oracle-state";
   const MAX_LOG = 20;
   const MAX_LIST_LOG = 10;
@@ -611,7 +830,14 @@
     threads: [],
     characters: [],
     threadsLog: [],
-    charactersLog: []
+    charactersLog: [],
+    rLevel: 3,
+    npcLog: [],
+    relationship: "neutral",
+    mood: "neutral",
+    responseLog: [],
+    demeanor: "Random",
+    discussionLog: []
   };
 
   // ================= Storage =================
@@ -633,6 +859,13 @@
         }
       }
     }catch(e){ /* no saved state yet, or storage unavailable — use defaults */ }
+    // Migrate entries saved by older versions of this app, where threads/
+    // characters were plain strings instead of {text, notes} objects.
+    ["threads","characters"].forEach(key => {
+      state[key] = (state[key] || []).map(item =>
+        typeof item === "string" ? { text: item, notes: "" } : item
+      );
+    });
     renderAll();
     switchTab(state.activeTab);
   }
@@ -691,6 +924,7 @@
     document.getElementById("panel-fate").hidden = tab !== "fate";
     document.getElementById("panel-meaning").hidden = tab !== "meaning";
     document.getElementById("panel-lists").hidden = tab !== "lists";
+    document.getElementById("panel-npc").hidden = tab !== "npc";
     document.querySelectorAll(".tab-btn").forEach(b => {
       b.classList.toggle("active", b.dataset.tab === tab);
     });
@@ -808,6 +1042,11 @@
   }
 
   // ================= Rendering & logic: Adventure Lists tab =================
+  // Tracks which list entries currently have their notes area expanded.
+  // Intentionally not persisted — it's just a UI convenience.
+  const expandedItems = { threads: new Set(), characters: new Set() };
+  const notesSaveTimers = {};
+
   function renderListItems(key){
     const arr = state[key];
     const ul = document.getElementById(key + "Items");
@@ -817,28 +1056,61 @@
       li.className = "empty-log";
       li.textContent = "Nothing added yet.";
       ul.appendChild(li);
-    } else {
-      arr.forEach((text, idx) => {
-        const li = document.createElement("li");
-        li.className = "item-row";
-        const span = document.createElement("span");
-        span.className = "item-text";
-        span.textContent = `${idx+1}. ${text}`;
-        const btn = document.createElement("button");
-        btn.className = "item-remove";
-        btn.setAttribute("aria-label", "Remove");
-        btn.textContent = "×";
-        btn.addEventListener("click", () => {
-          state[key].splice(idx, 1);
-          saveState();
-          renderListItems(key);
-          updateListCount(key);
-        });
-        li.appendChild(span);
-        li.appendChild(btn);
-        ul.appendChild(li);
-      });
+      return;
     }
+    arr.forEach((item, idx) => {
+      const li = document.createElement("li");
+      li.className = "item-block";
+
+      const header = document.createElement("div");
+      header.className = "item-header";
+
+      const span = document.createElement("span");
+      span.className = "item-text";
+      const dot = item.notes && item.notes.trim() ? "<span class=\"item-note-dot\">●</span>" : "";
+      span.innerHTML = `${dot}${idx+1}. ${item.text}`;
+
+      const btn = document.createElement("button");
+      btn.className = "item-remove";
+      btn.setAttribute("aria-label", "Remove");
+      btn.textContent = "×";
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        expandedItems[key].delete(idx);
+        state[key].splice(idx, 1);
+        saveState();
+        renderListItems(key);
+        updateListCount(key);
+      });
+
+      header.appendChild(span);
+      header.appendChild(btn);
+      header.addEventListener("click", () => {
+        if (expandedItems[key].has(idx)) expandedItems[key].delete(idx);
+        else expandedItems[key].add(idx);
+        renderListItems(key);
+      });
+
+      li.appendChild(header);
+
+      if (expandedItems[key].has(idx)){
+        const notesWrap = document.createElement("div");
+        notesWrap.className = "item-notes";
+        const textarea = document.createElement("textarea");
+        textarea.placeholder = "Notes…";
+        textarea.value = item.notes || "";
+        textarea.addEventListener("click", (e) => e.stopPropagation());
+        textarea.addEventListener("input", () => {
+          state[key][idx].notes = textarea.value;
+          clearTimeout(notesSaveTimers[key + idx]);
+          notesSaveTimers[key + idx] = setTimeout(saveState, 400);
+        });
+        notesWrap.appendChild(textarea);
+        li.appendChild(notesWrap);
+      }
+
+      ul.appendChild(li);
+    });
   }
 
   function updateListCount(key){
@@ -850,7 +1122,7 @@
     const input = document.getElementById(key + "Input");
     const val = input.value.trim();
     if (!val || state[key].length >= MAX_LIST_SIZE) return;
-    state[key].push(val);
+    state[key].push({ text: val, notes: "" });
     input.value = "";
     saveState();
     renderListItems(key);
@@ -896,6 +1168,7 @@
       dieBox.textContent = "List is empty";
       answerBox.className = "answer " + LIST_CONFIG[key].pickClass;
       answerBox.textContent = "Nothing to roll — add an entry first";
+      document.getElementById(key + "NotesText").textContent = "";
       resultBox.classList.remove("show");
       void resultBox.offsetWidth;
       resultBox.classList.add("show");
@@ -913,7 +1186,9 @@
     const line = Math.ceil(lineRoll/2);
     const index = (section-1)*5 + line;
     const isChoose = index > N;
-    const text = isChoose ? null : arr[index-1];
+    const picked = isChoose ? null : arr[index-1];
+    const text = isChoose ? null : picked.text;
+    const notes = isChoose ? null : picked.notes;
 
     const dieText = dieSize
       ? `Section: rolled ${sectionRoll} on d${dieSize} → section ${section} · Line: rolled ${lineRoll} on d10 → line ${line}`
@@ -921,6 +1196,7 @@
     dieBox.textContent = `${dieText} (slot ${index})`;
     answerBox.className = "answer " + LIST_CONFIG[key].pickClass;
     answerBox.textContent = isChoose ? "Choose — empty slot" : text;
+    document.getElementById(key + "NotesText").textContent = (!isChoose && notes && notes.trim()) ? notes : "";
 
     resultBox.classList.remove("show");
     void resultBox.offsetWidth;
@@ -931,7 +1207,195 @@
     if (state[logKey].length > MAX_LIST_LOG) state[logKey].length = MAX_LIST_LOG;
     renderListLog(key);
     saveState();
-    return { index, isChoose, text };
+    return { index, isChoose, text, notes };
+  }
+
+  // ================= Rendering & logic: NPC Creator tab =================
+  function renderRLevelRow(){
+    const container = document.getElementById("rLevelRow");
+    container.innerHTML = "";
+    document.getElementById("rLevelValue").textContent = state.rLevel;
+    for (let i=1; i<=5; i++){
+      const btn = document.createElement("button");
+      btn.className = "chaos-btn" + (i === state.rLevel ? " selected" : "");
+      btn.textContent = i;
+      btn.setAttribute("aria-pressed", i === state.rLevel ? "true" : "false");
+      if (i === state.rLevel){
+        btn.style.background = CHAOS_COLORS[i-1];
+        btn.style.borderColor = CHAOS_COLORS[i-1];
+      }
+      btn.addEventListener("click", () => {
+        state.rLevel = i;
+        saveState();
+        renderRLevelRow();
+      });
+      container.appendChild(btn);
+    }
+  }
+
+  function rollNpc(rLevel){
+    const modRoll = rollD100();
+    const nounRoll = rollD100();
+    const powerRoll = rollD100();
+    const powerLabel = evaluatePower(rLevel, powerRoll);
+
+    const usedColumns = new Set();
+    const motivations = [];
+    for (let i=0; i<3; i++){
+      const verbRoll = rollD100();
+      let nounR, col, guard = 0;
+      do {
+        nounR = rollD100();
+        col = motivationColumn(nounR);
+        guard++;
+      } while (usedColumns.has(col) && guard < 50);
+      usedColumns.add(col);
+      motivations.push({ verbRoll, verbWord: MOTIVATION_VERB[verbRoll-1], nounRoll: nounR, nounWord: MOTIVATION_NOUN[nounR-1] });
+    }
+
+    return {
+      modRoll, modWord: NPC_MODIFIER[modRoll-1],
+      nounRoll, nounWord: NPC_NOUN[nounRoll-1],
+      powerRoll, powerLabel, rLevel,
+      motivations
+    };
+  }
+
+  function renderNpcLog(){
+    const list = document.getElementById("npcLogList");
+    list.innerHTML = "";
+    if (state.npcLog.length === 0){
+      const li = document.createElement("li");
+      li.className = "empty-log";
+      li.textContent = "No NPCs yet.";
+      list.appendChild(li);
+      return;
+    }
+    state.npcLog.forEach(entry => {
+      const li = document.createElement("li");
+      li.className = "log-item";
+      const motivText = entry.motivations.map(m => titleCase(m.verbWord + " " + m.nounWord)).join("; ");
+      li.innerHTML = `
+        <span>
+          <span class="log-main">${titleCase(entry.modWord + " " + entry.nounWord)}</span>
+          <span class="log-sub">${entry.powerLabel} · ${motivText}</span>
+        </span>
+      `;
+      list.appendChild(li);
+    });
+  }
+
+  function renderRelationshipPills(){
+    const container = document.getElementById("relationshipPills");
+    container.innerHTML = "";
+    RELATIONSHIPS.forEach(name => {
+      const btn = document.createElement("button");
+      btn.className = "pill" + (name === state.relationship ? " selected" : "");
+      btn.textContent = titleCase(name);
+      btn.setAttribute("aria-pressed", name === state.relationship ? "true" : "false");
+      btn.addEventListener("click", () => {
+        state.relationship = name;
+        saveState();
+        renderRelationshipPills();
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  function renderMoodPills(){
+    const container = document.getElementById("moodPills");
+    container.innerHTML = "";
+    MOODS.forEach(name => {
+      const btn = document.createElement("button");
+      btn.className = "pill" + (name === state.mood ? " selected" : "");
+      btn.textContent = titleCase(name);
+      btn.setAttribute("aria-pressed", name === state.mood ? "true" : "false");
+      btn.addEventListener("click", () => {
+        state.mood = name;
+        saveState();
+        renderMoodPills();
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  function renderResponseLog(){
+    const list = document.getElementById("responseLogList");
+    list.innerHTML = "";
+    if (state.responseLog.length === 0){
+      const li = document.createElement("li");
+      li.className = "empty-log";
+      li.textContent = "No rolls yet.";
+      list.appendChild(li);
+      return;
+    }
+    state.responseLog.forEach(entry => {
+      const li = document.createElement("li");
+      li.className = "log-item";
+      const answerClass = entry.result.includes("Affirmative") ? "yes" : "no";
+      li.innerHTML = `
+        <span>
+          <span class="log-main">${titleCase(entry.relationship)} · ${titleCase(entry.mood)}</span><br>
+          rolled ${entry.roll}
+        </span>
+        <span class="log-answer ${answerClass}">${entry.result}</span>
+      `;
+      list.appendChild(li);
+    });
+  }
+
+  function renderDemeanorPills(){
+    const container = document.getElementById("demeanorPills");
+    container.innerHTML = "";
+    DEMEANOR_NAMES.forEach(name => {
+      const btn = document.createElement("button");
+      btn.className = "pill" + (name === state.demeanor ? " selected" : "");
+      btn.textContent = name;
+      btn.setAttribute("aria-pressed", name === state.demeanor ? "true" : "false");
+      btn.addEventListener("click", () => {
+        state.demeanor = name;
+        saveState();
+        renderDemeanorPills();
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  function rollDiscussion(selectedName){
+    let demeanorRoll = null;
+    let demeanor;
+    if (selectedName === "Random"){
+      demeanorRoll = rollD100();
+      demeanor = getDemeanorByRoll(demeanorRoll);
+    } else {
+      demeanor = getDemeanorByName(selectedName);
+    }
+    const bearingRoll = 1 + Math.floor(Math.random()*10);
+    const bearingWord = demeanor.words[bearingRoll-1];
+    const focusRoll = rollD100();
+    const focusLabel = getFocus(focusRoll);
+    return { demeanorRoll, demeanorName: demeanor.name, bearingRoll, bearingWord, focusRoll, focusLabel };
+  }
+
+  function renderDiscussionLog(){
+    const list = document.getElementById("discussionLogList");
+    list.innerHTML = "";
+    if (state.discussionLog.length === 0){
+      const li = document.createElement("li");
+      li.className = "empty-log";
+      li.textContent = "No rolls yet.";
+      list.appendChild(li);
+      return;
+    }
+    state.discussionLog.forEach(entry => {
+      const li = document.createElement("li");
+      li.className = "log-item";
+      li.innerHTML = `
+        <span class="log-main">${entry.demeanorName}</span>
+        <span class="log-answer meaning">${entry.bearingWord} → ${entry.focusLabel}</span>
+      `;
+      list.appendChild(li);
+    });
   }
 
   function renderAll(){
@@ -945,6 +1409,13 @@
       updateListCount(key);
       renderListLog(key);
     });
+    renderRLevelRow();
+    renderNpcLog();
+    renderRelationshipPills();
+    renderMoodPills();
+    renderResponseLog();
+    renderDemeanorPills();
+    renderDiscussionLog();
   }
 
   // ================= Roll handlers =================
@@ -1050,6 +1521,115 @@
       if (e.key === "Enter"){ e.preventDefault(); addListItem(key); }
     });
     document.getElementById(key + "RollBtn").addEventListener("click", () => rollOnList(key));
+  });
+
+  let lastNpcResult = null;
+
+  document.getElementById("npcCreateBtn").addEventListener("click", () => {
+    const npc = rollNpc(state.rLevel);
+    lastNpcResult = npc;
+
+    const resultSection = document.getElementById("npcResultBox");
+    document.getElementById("npcRollDie").textContent =
+      `Modifier ${npc.modRoll} · Noun ${npc.nounRoll} · Power ${npc.powerRoll} (R-level ${npc.rLevel})`;
+    document.getElementById("npcTitleText").textContent = titleCase(npc.modWord + " " + npc.nounWord);
+    document.getElementById("npcPowerText").textContent = `${npc.powerLabel}, relative to the PCs`;
+    document.getElementById("npcMotivationsText").innerHTML = npc.motivations
+      .map(m => `${titleCase(m.verbWord + " " + m.nounWord)} <span class="log-sub" style="display:inline;">(${m.verbRoll}, ${m.nounRoll})</span>`)
+      .join("<br>");
+    document.getElementById("npcAddFeedback").textContent = "";
+
+    resultSection.classList.remove("show");
+    void resultSection.offsetWidth;
+    resultSection.classList.add("show");
+
+    state.npcLog.unshift(npc);
+    if (state.npcLog.length > MAX_LIST_LOG) state.npcLog.length = MAX_LIST_LOG;
+    renderNpcLog();
+    saveState();
+  });
+
+  function npcToCharacterEntry(npc){
+    const title = titleCase(npc.modWord + " " + npc.nounWord);
+    const motivText = npc.motivations.map(m => titleCase(m.verbWord + " " + m.nounWord)).join("; ");
+    const notes = `${npc.powerLabel} power, relative to the PCs.\nMotivations: ${motivText}.`;
+    return { text: title, notes };
+  }
+
+  document.getElementById("npcAddToCharsBtn").addEventListener("click", () => {
+    const feedback = document.getElementById("npcAddFeedback");
+    if (!lastNpcResult) return;
+    if (state.characters.length >= MAX_LIST_SIZE){
+      feedback.textContent = `Characters list is full (${MAX_LIST_SIZE}/${MAX_LIST_SIZE}) — remove one to add another.`;
+      return;
+    }
+    state.characters.push(npcToCharacterEntry(lastNpcResult));
+    saveState();
+    renderListItems("characters");
+    updateListCount("characters");
+    feedback.textContent = "Added to Characters list ✓";
+  });
+
+  document.getElementById("npcClearBtn").addEventListener("click", () => {
+    state.npcLog = [];
+    renderNpcLog();
+    saveState();
+  });
+
+  document.getElementById("responseRollBtn").addEventListener("click", () => {
+    const roll = rollD100();
+    const result = evaluateResponse(state.relationship, state.mood, roll);
+    const moodIdx = MOODS.indexOf(state.mood);
+    const [veryAff, aff, neg] = RESPONSE_CHART[state.relationship][moodIdx];
+
+    const resultSection = document.getElementById("responseResultBox");
+    document.getElementById("responseRollValue").textContent = roll;
+    const answerEl = document.getElementById("responseAnswerText");
+    answerEl.textContent = result;
+    answerEl.className = "answer " + (result.includes("Affirmative") ? "yes" : "no");
+    document.getElementById("responseThresholdText").textContent =
+      `Very Affirmative ≤ ${veryAff} · Affirmative ≤ ${aff} · Negative ≤ ${neg} · Very Negative > ${neg}`;
+
+    resultSection.classList.remove("show");
+    void resultSection.offsetWidth;
+    resultSection.classList.add("show");
+
+    state.responseLog.unshift({ roll, relationship: state.relationship, mood: state.mood, result });
+    if (state.responseLog.length > MAX_LIST_LOG) state.responseLog.length = MAX_LIST_LOG;
+    renderResponseLog();
+    saveState();
+  });
+
+  document.getElementById("responseClearBtn").addEventListener("click", () => {
+    state.responseLog = [];
+    renderResponseLog();
+    saveState();
+  });
+
+  document.getElementById("discussionRollBtn").addEventListener("click", () => {
+    const d = rollDiscussion(state.demeanor);
+
+    const resultSection = document.getElementById("discussionResultBox");
+    document.getElementById("discussionRollDie").textContent = d.demeanorRoll !== null
+      ? `Demeanor ${d.demeanorRoll} → ${d.demeanorName} · Bearing ${d.bearingRoll} · Focus ${d.focusRoll}`
+      : `Demeanor: ${d.demeanorName} (chosen) · Bearing ${d.bearingRoll} · Focus ${d.focusRoll}`;
+    document.getElementById("discussionAnswerText").textContent =
+      `The ${d.demeanorName.toLowerCase()} NPC speaks of ${d.bearingWord} regarding ${d.focusLabel}.`;
+
+    resultSection.classList.remove("show");
+    void resultSection.offsetWidth;
+    resultSection.classList.add("show");
+
+    state.discussionLog.unshift(d);
+    if (state.discussionLog.length > MAX_LIST_LOG) state.discussionLog.length = MAX_LIST_LOG;
+    renderDiscussionLog();
+    saveState();
+  });
+
+  document.getElementById("discussionClearBtn").addEventListener("click", () => {
+    state.discussionLog = [];
+    renderDiscussionLog();
+    saveState();
   });
 
   loadState();
