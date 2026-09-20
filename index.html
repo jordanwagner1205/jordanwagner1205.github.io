@@ -2,1638 +2,1713 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>The Fate Chart — Mythic Oracle</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Weaveborn — The Loom</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg: #14141b;
-    --bg-alt: #191a24;
-    --panel: #1e1f2b;
-    --line: #33334667;
-    --line-strong: #3c3d52;
-    --text: #ece7da;
-    --muted: #9a9686;
-    --faint: #6c6a63;
-    --gold: #c9a35a;
-    --gold-dim: #8a7442;
-    --yes: #6aad93;
-    --no: #bd5c50;
-    --event: #a486cf;
-    --radius: 3px;
-  }
-  *{ box-sizing: border-box; }
-  html,body{ margin:0; padding:0; }
-  body{
-    background: radial-gradient(ellipse at top, var(--bg-alt), var(--bg) 60%);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    min-height: 100vh;
-    padding: 32px 16px 60px;
-    -webkit-font-smoothing: antialiased;
-  }
-  .wrap{ max-width: 460px; margin: 0 auto; }
+/* ===========================================================
+   Design tokens — light (default) and dark
+=========================================================== */
+:root {
+  --bg: #eef1e7;
+  --bg-panel: #ffffff;
+  --bg-panel-alt: #e4e8da;
+  --thread: #c7ccba;
+  --thread-strong: #a7ae98;
+  --ink: #262a22;
+  --ink-dim: #666e5d;
+  --accent: #9c7419;
+  --accent-ink: #2a1f08;
+  --accent-glow: #f1dda0;
+  --harm: #a8402f;
+  --strain: #3d6c8a;
+  --good: #4d7a48;
 
-  header{ text-align:center; margin-bottom: 26px; }
-  .mark{
-    font-family:'Spectral', serif;
-    font-size: 1.6rem;
-    color: var(--gold);
-    display:block;
-    margin-bottom: 6px;
-    letter-spacing: 0.04em;
-  }
-  h1{
-    font-family:'Spectral', serif;
-    font-weight: 500;
-    font-size: 2rem;
-    margin: 0 0 6px;
-    color: var(--text);
-  }
-  header p{
-    margin:0;
-    color: var(--muted);
-    font-size: 0.85rem;
-    letter-spacing: 0.02em;
-  }
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --font-body: 'Karla', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
 
-  .tabbar{
-    display:flex;
-    border-bottom: 1px solid var(--line-strong);
-    margin-bottom: 22px;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14161b;
+    --bg-panel: #1b1e25;
+    --bg-panel-alt: #21242c;
+    --thread: #383d49;
+    --thread-strong: #4c5261;
+    --ink: #e9e6da;
+    --ink-dim: #9aa0a6;
+    --accent: #f0c14b;
+    --accent-ink: #1c1503;
+    --accent-glow: #fbe7ab;
+    --harm: #dd8171;
+    --strain: #8ab2d4;
+    --good: #93c47f;
   }
-  .tab-btn{
-    flex:1;
-    background:none;
-    border:none;
-    color: var(--muted);
-    font-family: 'Inter', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 500;
-    padding: 10px 2px 12px;
-    cursor:pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    transition: color 0.15s ease, border-color 0.15s ease;
-  }
-  .tab-btn:hover{ color: var(--text); }
-  .tab-btn.active{ color: var(--gold); border-bottom-color: var(--gold); }
+}
 
-  section{
-    border-top: 1px solid var(--line);
-    padding: 22px 0;
-  }
-  .tab-panel > section:first-of-type{ border-top: none; padding-top:0; }
+:root[data-theme="dark"] {
+  --bg: #14161b;
+  --bg-panel: #1b1e25;
+  --bg-panel-alt: #21242c;
+  --thread: #383d49;
+  --thread-strong: #4c5261;
+  --ink: #e9e6da;
+  --ink-dim: #9aa0a6;
+  --accent: #f0c14b;
+  --accent-ink: #1c1503;
+  --accent-glow: #fbe7ab;
+  --harm: #dd8171;
+  --strain: #8ab2d4;
+  --good: #93c47f;
+}
 
-  .label-row{
-    display:flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 12px;
-  }
-  .label{
-    font-size: 0.78rem;
-    color: var(--muted);
-    font-weight: 500;
-  }
-  .label-value{
-    font-family:'Spectral', serif;
-    font-size: 1.05rem;
-    color: var(--gold);
-  }
+/* ===========================================================
+   Base
+=========================================================== */
+* { box-sizing: border-box; }
 
-  .pills{ display:flex; flex-wrap: wrap; gap: 8px; }
-  .pill{
-    font-family: 'Inter', sans-serif;
-    font-size: 0.82rem;
-    color: var(--muted);
-    background: transparent;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius);
-    padding: 7px 12px;
-    cursor: pointer;
-    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
-  }
-  .pill:hover{ border-color: var(--gold-dim); color: var(--text); }
-  .pill.selected{
-    color: #17181f;
-    background: var(--gold);
-    border-color: var(--gold);
-    font-weight: 600;
-  }
-  .pill:focus-visible, button:focus-visible, input:focus-visible{
-    outline: 2px solid var(--gold);
-    outline-offset: 2px;
-  }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+}
 
-  .chaos-row{ display:flex; gap: 7px; }
-  .chaos-btn{
-    flex:1;
-    aspect-ratio: 1;
-    border-radius: var(--radius);
-    border: 1px solid var(--line-strong);
-    background: transparent;
-    color: var(--muted);
-    font-family: 'Spectral', serif;
-    font-size: 1.05rem;
-    cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-  }
-  .chaos-btn:hover{ transform: translateY(-1px); }
-  .chaos-btn.selected{
-    color: #17181f;
-    font-weight: 600;
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15);
-  }
+body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  min-height: 100vh;
+  background-image:
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--thread) 35%, transparent) 0 1px, transparent 1px 96px),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--thread) 35%, transparent) 0 1px, transparent 1px 96px);
+  background-attachment: fixed;
+}
 
-  .roll-btn{
-    width:100%;
-    margin-top: 4px;
-    padding: 14px;
-    background: var(--gold);
-    color: #17181f;
-    border: none;
-    border-radius: var(--radius);
-    font-family: 'Inter', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    cursor: pointer;
-    transition: filter 0.15s ease;
-  }
-  .roll-btn:hover{ filter: brightness(1.08); }
-  .roll-btn:active{ filter: brightness(0.95); }
-  .roll-btn.secondary{
-    background: transparent;
-    border: 1px solid var(--gold-dim);
-    color: var(--gold);
-  }
-  .roll-btn.secondary:hover{ filter:none; border-color: var(--gold); }
+#app {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 20px 96px;
+}
 
-  .result{ display:none; }
-  .result.show{ display:block; animation: reveal 0.35s ease; }
-  @keyframes reveal{
-    from{ opacity:0; transform: translateY(6px); }
-    to{ opacity:1; transform: translateY(0); }
-  }
-  .roll-die{
-    font-family: 'Inter', sans-serif;
-    font-variant-numeric: tabular-nums;
-    color: var(--faint);
-    font-size: 0.8rem;
-    margin-bottom: 2px;
-  }
-  .roll-die b{ color: var(--muted); font-size: 0.95rem; }
-  .answer{
-    font-family: 'Spectral', serif;
-    font-size: 2.3rem;
-    line-height: 1.15;
-    margin: 2px 0 6px;
-  }
-  .answer.yes{ color: var(--yes); }
-  .answer.no{ color: var(--no); }
-  .answer.meaning{ color: var(--event); font-size: 1.9rem; }
-  .answer.thread-pick{ color: var(--gold); font-size: 1.5rem; }
-  .answer.character-pick{ color: var(--event); font-size: 1.5rem; }
-  .answer.npc-title{ color: var(--gold); }
-  .thresholds{
-    font-size: 0.78rem;
-    color: var(--faint);
-    margin-bottom: 18px;
-  }
-  .event-box{
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius);
-    padding: 12px 14px;
-    font-size: 0.85rem;
-  }
-  .event-box.none{ color: var(--faint); }
-  .event-box.hit{
-    border-color: var(--event);
-    color: var(--text);
-  }
-  .event-title{
-    font-family:'Spectral', serif;
-    font-size: 1rem;
-    color: var(--event);
-    margin-bottom: 3px;
-  }
-  .event-detail{ color: var(--muted); }
-  .jump-btn{
-    display: inline-block;
-    margin-top: 10px;
-    background: none;
-    border: 1px solid var(--event);
-    color: var(--event);
-    font-family: 'Inter', sans-serif;
-    font-size: 0.78rem;
-    font-weight: 500;
-    padding: 6px 11px;
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
-  }
-  .jump-btn:hover{ background: var(--event); color: #17181f; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; color: var(--ink); margin: 0 0 8px; }
+h1 { font-size: 2rem; line-height: 1.08; }
+h2 { font-size: 1.25rem; margin-top: 0; }
+h3 { font-size: 1.05rem; }
+p { margin: 0 0 8px; }
 
-  .log-list{
-    list-style:none;
-    margin:0; padding:0;
-    display:flex;
-    flex-direction: column;
-    gap: 9px;
-    max-height: 260px;
-    overflow-y: auto;
-  }
-  .log-list.compact{ max-height: 160px; }
-  .log-item{
-    font-size: 0.8rem;
-    color: var(--muted);
-    border-bottom: 1px solid var(--line);
-    padding-bottom: 9px;
-    display:flex;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  .log-item:last-child{ border-bottom:none; padding-bottom:0; }
-  .log-main{ color: var(--text); }
-  .log-answer{ font-weight:600; white-space: nowrap; }
-  .log-answer.yes{ color: var(--yes); }
-  .log-answer.no{ color: var(--no); }
-  .log-answer.meaning{ color: var(--event); }
-  .log-answer.thread-pick{ color: var(--gold); white-space: normal; text-align:right; }
-  .log-answer.character-pick{ color: var(--event); white-space: normal; text-align:right; }
-  .log-event{ color: var(--event); font-size: 0.74rem; display:block; margin-top:2px; }
-  .log-sub{ color: var(--faint); font-size: 0.74rem; display:block; margin-top:2px; }
-  .empty-log{ color: var(--faint); font-size: 0.82rem; }
+button { font-family: inherit; }
+input, select, textarea { font-family: inherit; font-size: 1rem; color: var(--ink); accent-color: var(--accent); }
 
-  .clear-btn{
-    margin-top: 14px;
-    background: none;
-    border: none;
-    color: var(--faint);
-    font-size: 0.76rem;
-    text-decoration: underline;
-    cursor: pointer;
-    padding: 0;
-  }
-  .clear-btn:hover{ color: var(--muted); }
+::selection { background: var(--accent-glow); color: var(--accent-ink); }
 
-  .add-row{ display:flex; gap:8px; margin-bottom: 12px; }
-  .add-row input[type="text"]{
-    flex:1;
-    background: var(--panel);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius);
-    color: var(--text);
-    padding: 9px 10px;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.85rem;
-    min-width: 0;
-  }
-  .add-row input::placeholder{ color: var(--faint); }
-  .add-btn{
-    background: var(--gold);
-    color: #17181f;
-    border: none;
-    border-radius: var(--radius);
-    padding: 0 16px;
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .add-btn:disabled{ opacity: 0.35; cursor: not-allowed; }
+/* ===========================================================
+   Buttons
+=========================================================== */
+.btn {
+  font-size: 0.95rem;
+  padding: 10px 18px;
+  border: 1px solid var(--thread-strong);
+  background: var(--bg-panel);
+  color: var(--ink);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease, transform 80ms ease;
+}
+.btn:hover { border-color: var(--accent); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-  .item-list{
-    list-style:none;
-    margin: 0 0 14px;
-    padding: 0;
-    display:flex;
-    flex-direction: column;
-    gap: 6px;
-    max-height: 280px;
-    overflow-y: auto;
-  }
-  .item-block{
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 8px 10px;
-  }
-  .item-header{
-    display:flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    font-size: 0.85rem;
-    cursor: pointer;
-  }
-  .item-text{ color: var(--text); flex:1; }
-  .item-note-dot{ color: var(--gold); font-size: 0.6rem; margin-right: 4px; vertical-align: middle; }
-  .item-remove{
-    background: none;
-    border: none;
-    color: var(--faint);
-    font-size: 1.05rem;
-    line-height: 1;
-    cursor: pointer;
-    padding: 2px 4px;
-    flex-shrink: 0;
-  }
-  .item-remove:hover{ color: var(--no); }
-  .item-notes{ margin-top: 8px; }
-  .item-notes textarea{
-    width: 100%;
-    min-height: 60px;
-    background: var(--bg-alt);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    font-size: 0.8rem;
-    padding: 8px;
-    resize: vertical;
-  }
-  .item-notes textarea::placeholder{ color: var(--faint); }
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+.btn-primary:hover { border-color: var(--accent); filter: brightness(1.05); }
 
-  .subsection-note{
-    font-size: 0.76rem;
-    color: var(--faint);
-    margin-top: -6px;
-    margin-bottom: 14px;
-  }
+.btn-ghost { background: transparent; border-color: transparent; }
+.btn-ghost:hover { border-color: var(--thread-strong); }
 
-  footer{
-    text-align:center;
-    color: var(--faint);
-    font-size: 0.72rem;
-    margin-top: 30px;
-    line-height:1.6;
-  }
+.btn-danger { color: var(--harm); }
+.btn-danger:hover { border-color: var(--harm); }
+.btn-danger-solid { background: var(--harm); border-color: var(--harm); color: #fff; font-weight: 600; }
+.btn-danger-solid:hover { filter: brightness(1.08); }
+.confirm-delete-text { font-size: 0.85rem; color: var(--ink-dim); align-self: center; }
+
+.btn-new { display: block; width: 100%; margin: 28px 0 8px; padding: 14px; font-size: 1.02rem; }
+.btn-pun { white-space: nowrap; }
+
+/* ===========================================================
+   Home / Loom
+=========================================================== */
+.home-header { margin-bottom: 24px; }
+.kicker {
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--accent);
+  font-size: 1rem;
+  margin-bottom: 2px;
+}
+.home-sub { color: var(--ink-dim); }
+
+.empty-loom {
+  border: 1px dashed var(--thread-strong);
+  border-radius: 4px;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--ink-dim);
+}
+.empty-loom-title { font-family: var(--font-display); font-size: 1.2rem; color: var(--ink); margin-bottom: 4px; }
+.empty-loom-body { margin: 0; }
+
+.char-grid { display: flex; flex-direction: column; gap: 10px; }
+
+.thread-pick-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.thread-pick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--thread);
+  border-left: 4px solid var(--accent);
+  border-radius: 3px;
+  cursor: pointer;
+  color: var(--ink);
+}
+.thread-pick-card:hover { border-color: var(--accent); }
+.thread-pick-name { font-family: var(--font-display); font-size: 1.15rem; }
+.thread-pick-sub { font-size: 0.82rem; color: var(--ink-dim); }
+
+.char-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  text-align: left;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--thread);
+  border-left: 4px solid var(--accent);
+  border-radius: 3px;
+  cursor: pointer;
+  color: var(--ink);
+}
+.char-card:hover { border-color: var(--accent); }
+.char-card-thread { font-size: 0.8rem; color: var(--ink-dim); }
+.char-card-name { font-family: var(--font-display); font-size: 1.15rem; }
+.char-card-status { display: flex; gap: 14px; font-size: 0.85rem; color: var(--ink-dim); }
+.pip-bad { color: var(--harm); font-weight: 700; }
+
+.storage-note { margin-top: 20px; font-size: 0.8rem; color: var(--ink-dim); text-align: center; }
+
+/* ===========================================================
+   Wizard
+=========================================================== */
+.step-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-bottom: 24px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--thread);
+}
+.step-tab { font-size: 0.85rem; color: var(--ink-dim); }
+.step-tab-active { color: var(--accent); font-weight: 700; }
+.step-tab-done { color: var(--ink); }
+
+.wiz-section {
+  margin-bottom: 30px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--thread);
+}
+.wiz-section:last-child { border-bottom: none; }
+.wiz-hint { color: var(--ink-dim); font-size: 0.92rem; }
+
+.field-label { display: block; font-size: 0.85rem; color: var(--ink-dim); margin-bottom: 6px; }
+.name-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.text-input {
+  flex: 1 1 220px;
+  padding: 10px 12px;
+  border: 1px solid var(--thread-strong);
+  border-radius: 3px;
+  background: var(--bg-panel);
+  color: var(--ink);
+}
+.text-input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.section-head-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.section-head-row h2 { margin-bottom: 0; }
+.btn-random { font-size: 0.85rem; padding: 6px 12px; white-space: nowrap; }
+
+.formative-subhead { color: var(--ink-dim); font-size: 0.85rem; margin: 14px 0 6px; }
+.formative-subhead-burden { color: var(--harm); }
+.formative-text { line-height: 1.4; }
+
+.radio-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+.radio-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--thread);
+  border-radius: 3px;
+  background: var(--bg-panel);
+  cursor: pointer;
+}
+.radio-row-checked { border-color: var(--accent); background: color-mix(in srgb, var(--accent-glow) 35%, var(--bg-panel)); }
+.pair-slash { color: var(--ink-dim); padding: 0 2px; }
+
+.pool-status { font-size: 0.88rem; color: var(--accent); font-weight: 600; margin-bottom: 14px; }
+
+.axis-row, .style-row { margin-bottom: 18px; }
+.axis-row-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+.axis-label { font-family: var(--font-display); font-size: 1.05rem; }
+.axis-hint { color: var(--ink-dim); font-size: 0.85rem; margin-bottom: 6px; }
+.axis-note { color: var(--ink-dim); font-size: 0.85rem; font-style: italic; }
+
+.pool-select {
+  padding: 6px 10px;
+  border: 1px solid var(--thread-strong);
+  border-radius: 3px;
+  background: var(--bg-panel);
+  color: var(--ink);
+  min-width: 64px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.axis-current-text { font-size: 0.9rem; color: var(--ink); margin: 2px 0 0; font-style: italic; }
+
+.skill-list { display: flex; flex-direction: column; gap: 4px; }
+.skill-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--thread);
+}
+.skill-row:last-child { border-bottom: none; }
+.skill-name { font-family: var(--font-display); }
+.skill-toggle { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--ink-dim); white-space: nowrap; cursor: pointer; }
+.skill-toggle-disabled { opacity: 0.35; cursor: not-allowed; }
+
+.ability-list { display: flex; flex-direction: column; gap: 10px; }
+.ability-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--thread);
+  border-radius: 3px;
+  background: var(--bg-panel);
+  cursor: pointer;
+}
+.ability-row input { grid-row: 1 / span 3; margin-top: 3px; }
+.ability-row-checked { border-color: var(--accent); background: color-mix(in srgb, var(--accent-glow) 30%, var(--bg-panel)); }
+.ability-name { font-family: var(--font-display); font-size: 1.05rem; }
+.ability-body { color: var(--ink); font-size: 0.92rem; }
+.ability-bonus { color: var(--accent); font-size: 0.88rem; font-weight: 600; }
+
+.review-name { font-family: var(--font-display); font-size: 1.6rem; margin-bottom: 4px; }
+.review-line { color: var(--ink-dim); }
+.review-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.review-chip {
+  font-size: 0.82rem;
+  padding: 4px 10px;
+  border: 1px solid var(--thread-strong);
+  border-radius: 20px;
+  color: var(--ink);
+}
+
+.wizard-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid var(--thread);
+}
+.wizard-footer-right { display: flex; gap: 10px; }
+
+/* ===========================================================
+   Sheet
+=========================================================== */
+.sheet-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 8px; }
+.sheet-topbar-actions { display: flex; gap: 8px; }
+
+.sheet-header { margin-bottom: 26px; }
+.sheet-aspiration { font-size: 1.02rem; }
+.sheet-formative { color: var(--ink-dim); }
+
+.sheet-section {
+  margin-bottom: 26px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--thread);
+}
+.sheet-section:last-child { border-bottom: none; }
+.sheet-subhead { margin-top: 18px; color: var(--ink-dim); font-size: 0.9rem; }
+
+.track-row { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; padding-top: 14px; }
+.track-label-wrap { position: relative; min-width: 60px; display: inline-flex; }
+.track-label { font-weight: 700; }
+.track-label-bad { color: var(--harm); }
+.track-status-badge {
+  position: absolute;
+  top: -18px;
+  left: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: var(--harm);
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  animation: badge-pop 180ms ease;
+  pointer-events: none;
+}
+@keyframes badge-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.pip-track { display: flex; gap: 6px; }
+.pip {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--thread-strong);
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+.pip-filled { background: var(--harm); border-color: var(--harm); }
+.pip-threshold { box-shadow: 0 0 0 2px var(--bg) inset, 0 0 0 3px var(--ink-dim); }
+
+/* Stepper buttons (Harm/Strain/Karma +/-) */
+.stepper-btn {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--thread-strong);
+  background: var(--bg-panel);
+  color: var(--ink);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.stepper-btn:hover { border-color: var(--accent); }
+.stepper-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.track-count { font-size: 0.85rem; color: var(--ink-dim); min-width: 40px; }
+
+/* Karma */
+.karma-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.karma-label { font-family: var(--font-display); font-weight: 600; margin-right: 2px; }
+.karma-value { font-family: var(--font-display); font-size: 1.3rem; color: var(--accent); min-width: 24px; text-align: center; }
+.karma-hint { font-size: 0.82rem; color: var(--ink-dim); margin: 0 0 12px; }
+.karma-staged-tag { color: var(--accent); font-weight: 700; }
+.btn-roll { display: block; width: 100%; margin-bottom: 20px; }
+
+/* Stat cards (Threadcraft, sheet view) — the whole card is the Karma-boost
+   control; the debility pill and any focusable child intercept their own
+   clicks via event delegation (closest() matches the nearer element). */
+.stat-card-list { display: flex; flex-direction: column; gap: 8px; }
+.stat-card {
+  padding: 10px 12px;
+  border: 1px solid var(--thread);
+  border-radius: 3px;
+  background: var(--bg-panel);
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.stat-card:hover { border-color: var(--accent); }
+.stat-card:active { background: var(--bg-panel-alt); }
+.stat-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.stat-card-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.stat-card-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.stat-card-label { font-family: var(--font-display); font-size: 1.02rem; }
+
+.stat-card-total-wrap { display: flex; align-items: baseline; gap: 5px; flex-shrink: 0; }
+.stat-card-total { font-family: var(--font-display); font-size: 1.45rem; color: var(--ink-dim); line-height: 1; }
+.stat-card-total-modified { color: var(--accent); }
+.stat-card-boost-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent-glow) 55%, transparent);
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.stat-card-desc { margin: 4px 0 0; font-size: 0.85rem; color: var(--ink-dim); }
+
+.debility-pill {
+  font-size: 0.74rem;
+  padding: 3px 9px;
+  border: 1px solid var(--thread-strong);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--ink-dim);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.debility-pill-active { background: var(--harm); border-color: var(--harm); color: #fff; }
+
+.sheet-axis-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.sheet-axis {
+  flex: 1 1 150px;
+  padding: 10px 12px;
+  border: 1px solid var(--thread);
+  border-radius: 3px;
+  background: var(--bg-panel);
+}
+.sheet-axis-label { display: block; font-size: 0.8rem; color: var(--ink-dim); }
+.sheet-axis-value { display: block; font-family: var(--font-display); font-size: 1.4rem; color: var(--accent); }
+.sheet-axis-desc { display: block; font-size: 0.82rem; margin-top: 2px; }
+
+.sheet-skill-grid { display: flex; flex-direction: column; gap: 2px; }
+.sheet-skill {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--thread);
+  font-size: 0.95rem;
+}
+.sheet-skill-expert { color: var(--accent); font-weight: 700; }
+.sheet-skill-trained { color: var(--ink); font-weight: 600; }
+.sheet-skill-untrained { color: var(--ink-dim); }
+
+.sheet-ability-body { font-size: 0.98rem; }
+.sheet-ability-bonus { color: var(--accent); font-weight: 600; }
+
+.notes-area {
+  width: 100%;
+  min-height: 110px;
+  padding: 10px 12px;
+  border: 1px solid var(--thread-strong);
+  border-radius: 3px;
+  background: var(--bg-panel);
+  color: var(--ink);
+  resize: vertical;
+}
+
+/* ===========================================================
+   Toast
+=========================================================== */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--ink);
+  color: var(--bg);
+  padding: 9px 18px;
+  border-radius: 20px;
+  font-size: 0.88rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+.toast-visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ===========================================================
+   Responsive
+=========================================================== */
+@media (max-width: 480px) {
+  #app { padding: 22px 14px 90px; }
+  h1 { font-size: 1.6rem; }
+  .skill-row { grid-template-columns: 1fr; gap: 2px; }
+  .track-label { min-width: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
 </style>
 </head>
 <body>
-<div class="wrap">
-
-  <header>
-    <span class="mark">⟡</span>
-    <h1>The Fate Chart</h1>
-    <p>An oracle for Mythic-style solo play</p>
-  </header>
-
-  <div class="tabbar">
-    <button class="tab-btn" data-tab="fate">Fate Chart</button>
-    <button class="tab-btn" data-tab="meaning">Meaning</button>
-    <button class="tab-btn" data-tab="lists">Lists</button>
-    <button class="tab-btn" data-tab="npc">NPCs</button>
-  </div>
-
-  <!-- ===================== FATE CHART TAB ===================== -->
-  <div class="tab-panel" id="panel-fate">
-
-    <section>
-      <div class="label-row"><span class="label">Odds</span></div>
-      <div class="pills" id="oddsPills"></div>
-    </section>
-
-    <section>
-      <div class="label-row">
-        <span class="label">Chaos factor</span>
-        <span class="label-value" id="chaosValue">5</span>
-      </div>
-      <div class="chaos-row" id="chaosRow"></div>
-    </section>
-
-    <section>
-      <button class="roll-btn" id="rollBtn">Consult the chart</button>
-    </section>
-
-    <section class="result" id="resultSection">
-      <div class="roll-die">Rolled <b id="rollValue">—</b> on d100</div>
-      <div class="answer" id="answerText">—</div>
-      <div class="thresholds" id="thresholdText"></div>
-      <div class="event-box" id="eventBox">
-        <div class="event-title" id="eventTitle"></div>
-        <div class="event-detail" id="eventDetail"></div>
-        <button class="jump-btn" id="eventJumpBtn" hidden></button>
-      </div>
-    </section>
-
-    <section>
-      <div class="label-row"><span class="label">Log</span></div>
-      <ul class="log-list" id="logList"></ul>
-      <button class="clear-btn" id="clearBtn">Clear log</button>
-    </section>
-
-  </div>
-
-  <!-- ===================== EVENT MEANING TAB ===================== -->
-  <div class="tab-panel" id="panel-meaning" hidden>
-
-    <section>
-      <div class="label-row"><span class="label">Meaning table</span></div>
-      <div class="pills" id="meaningPills"></div>
-    </section>
-
-    <section>
-      <button class="roll-btn" id="meaningRollBtn">Roll for meaning</button>
-    </section>
-
-    <section class="result" id="meaningResultSection">
-      <div class="roll-die">Rolled <b id="meaningRollValues">—</b> on d100</div>
-      <div class="answer meaning" id="meaningAnswerText">—</div>
-      <div class="thresholds" id="meaningSubText"></div>
-    </section>
-
-    <section>
-      <div class="label-row"><span class="label">Log</span></div>
-      <ul class="log-list" id="meaningLogList"></ul>
-      <button class="clear-btn" id="meaningClearBtn">Clear log</button>
-    </section>
-
-  </div>
-
-  <!-- ===================== ADVENTURE LISTS TAB ===================== -->
-  <div class="tab-panel" id="panel-lists" hidden>
-
-    <section>
-      <div class="label-row">
-        <span class="label">Threads</span>
-        <span class="label-value" id="threadsCount">0/25</span>
-      </div>
-      <div class="subsection-note">Tap an entry to add notes.</div>
-      <div class="add-row">
-        <input type="text" id="threadsInput" placeholder="Add a thread…" maxlength="140">
-        <button class="add-btn" id="threadsAddBtn">Add</button>
-      </div>
-      <ul class="item-list" id="threadsItems"></ul>
-      <button class="roll-btn secondary" id="threadsRollBtn">Roll a thread</button>
-      <div class="result" id="threadsResultBox">
-        <div class="roll-die" id="threadsRollDie">—</div>
-        <div class="answer thread-pick" id="threadsAnswerText">—</div>
-        <div class="thresholds" id="threadsNotesText" style="white-space:pre-wrap;"></div>
-      </div>
-      <ul class="log-list compact" id="threadsLogList" style="margin-top:14px;"></ul>
-    </section>
-
-    <section>
-      <div class="label-row">
-        <span class="label">Characters</span>
-        <span class="label-value" id="charactersCount">0/25</span>
-      </div>
-      <div class="subsection-note">Tap an entry to add notes.</div>
-      <div class="add-row">
-        <input type="text" id="charactersInput" placeholder="Add a character…" maxlength="140">
-        <button class="add-btn" id="charactersAddBtn">Add</button>
-      </div>
-      <ul class="item-list" id="charactersItems"></ul>
-      <button class="roll-btn secondary" id="charactersRollBtn">Roll a character</button>
-      <div class="result" id="charactersResultBox">
-        <div class="roll-die" id="charactersRollDie">—</div>
-        <div class="answer character-pick" id="charactersAnswerText">—</div>
-        <div class="thresholds" id="charactersNotesText" style="white-space:pre-wrap;"></div>
-      </div>
-      <ul class="log-list compact" id="charactersLogList" style="margin-top:14px;"></ul>
-    </section>
-
-  </div>
-
-  <!-- ===================== NPC (ÜNE) TAB ===================== -->
-  <div class="tab-panel" id="panel-npc" hidden>
-
-    <section>
-      <div class="label-row"><span class="label">NPC Creator</span></div>
-      <div class="subsection-note">Rolls a title, power level, and three motivations.</div>
-      <div class="label-row">
-        <span class="label">Scene R-level</span>
-        <span class="label-value" id="rLevelValue">3</span>
-      </div>
-      <div class="chaos-row" id="rLevelRow"></div>
-      <button class="roll-btn" id="npcCreateBtn" style="margin-top:16px;">Create NPC</button>
-      <div class="result" id="npcResultBox">
-        <div class="roll-die" id="npcRollDie">—</div>
-        <div class="answer npc-title" id="npcTitleText">—</div>
-        <div class="thresholds" id="npcPowerText"></div>
-        <div class="event-box none" id="npcMotivationsBox">
-          <div class="event-title" id="npcMotivationsTitle">Motivations</div>
-          <div class="event-detail" id="npcMotivationsText"></div>
-        </div>
-        <button class="jump-btn" id="npcAddToCharsBtn" style="margin-top:10px;">Add to Characters list →</button>
-        <div class="subsection-note" id="npcAddFeedback" style="margin-top:6px; margin-bottom:0;"></div>
-      </div>
-      <ul class="log-list compact" id="npcLogList" style="margin-top:14px;"></ul>
-      <button class="clear-btn" id="npcClearBtn">Clear log</button>
-    </section>
-
-    <section>
-      <div class="label-row"><span class="label">NPC Response</span></div>
-      <div class="subsection-note">A yes/no answer, weighted by relationship and mood.</div>
-      <div class="label-row"><span class="label">Relationship</span></div>
-      <div class="pills" id="relationshipPills"></div>
-      <div class="label-row" style="margin-top:14px;"><span class="label">Conversation mood</span></div>
-      <div class="pills" id="moodPills"></div>
-      <button class="roll-btn" id="responseRollBtn" style="margin-top:16px;">Get response</button>
-      <div class="result" id="responseResultBox">
-        <div class="roll-die">Rolled <b id="responseRollValue">—</b> on d100</div>
-        <div class="answer" id="responseAnswerText">—</div>
-        <div class="thresholds" id="responseThresholdText"></div>
-      </div>
-      <ul class="log-list compact" id="responseLogList" style="margin-top:14px;"></ul>
-      <button class="clear-btn" id="responseClearBtn">Clear log</button>
-    </section>
-
-    <section>
-      <div class="label-row"><span class="label">NPC Discussion</span></div>
-      <div class="subsection-note">Find what an NPC wants to talk about.</div>
-      <div class="label-row"><span class="label">Demeanor</span></div>
-      <div class="pills" id="demeanorPills"></div>
-      <button class="roll-btn" id="discussionRollBtn" style="margin-top:16px;">Roll discussion topic</button>
-      <div class="result" id="discussionResultBox">
-        <div class="roll-die" id="discussionRollDie">—</div>
-        <div class="answer meaning" id="discussionAnswerText">—</div>
-      </div>
-      <ul class="log-list compact" id="discussionLogList" style="margin-top:14px;"></ul>
-      <button class="clear-btn" id="discussionClearBtn">Clear log</button>
-    </section>
-
-  </div>
-
-  <footer>
-    Fate Chart odds/thresholds, the Random Event Focus Table, the Actions &amp; Descriptions Meaning Tables, and the Adventure Lists selection method all follow the Mythic GM Emulator, 2nd Edition. The NPC tab implements ÜNE: The Üniversal NPC Emulator, by Zach Best (Conjecture Games).<br>
-    Each List holds up to 25 entries in 5 sections of 5; rolling can land on an empty slot ("Choose") when a section isn't full yet — that's expected, not a bug.
-  </footer>
-
-</div>
-
+<div id="app"></div>
 <script>
-(function(){
+/* ===========================================================
+   WEAVEBORN — Playbook Loom
+   Character creator + live play sheet, built to hold many
+   Threads (playbooks). Only "Light" is defined for now.
+=========================================================== */
 
-  // ================= FATE CHART DATA =================
-  // Each odds level maps to 9 triplets (Chaos Factor 1-9):
-  // [exceptionalYesMax, yesMax, exceptionalNoMin] — null means that
-  // exceptional tier is not reachable at that Odds/Chaos combination.
-  const ODDS_LEVELS = [
-    "Certain", "Nearly Certain", "Very Likely", "Likely", "50/50",
-    "Unlikely", "Very Unlikely", "Nearly Impossible", "Impossible"
-  ];
+/* ---------------- Playbook data ---------------- */
 
-  const FATE_CHART = {
-    "Certain":            [[10,50,91],[13,65,94],[15,75,96],[17,85,98],[18,90,99],[19,95,100],[20,99,null],[20,99,null],[20,99,null]],
-    "Nearly Certain":      [[7,35,88],[10,50,91],[13,65,94],[15,75,96],[17,85,98],[18,90,99],[19,95,100],[20,99,null],[20,99,null]],
-    "Very Likely":         [[5,25,86],[7,35,88],[10,50,91],[13,65,94],[15,75,96],[17,85,98],[18,90,99],[19,95,100],[20,99,null]],
-    "Likely":              [[3,15,84],[5,25,86],[7,35,88],[10,50,91],[13,65,94],[15,75,96],[17,85,98],[18,90,99],[19,95,100]],
-    "50/50":               [[2,10,83],[3,15,84],[5,25,86],[7,35,88],[10,50,91],[13,65,94],[15,75,96],[17,85,98],[18,90,99]],
-    "Unlikely":            [[1,5,82],[2,10,83],[3,15,84],[5,25,86],[7,35,88],[10,50,91],[13,65,94],[15,75,96],[17,85,98]],
-    "Very Unlikely":       [[null,1,81],[1,5,82],[2,10,83],[3,15,84],[5,25,86],[7,35,88],[10,50,91],[13,65,94],[15,75,96]],
-    "Nearly Impossible":   [[null,1,81],[null,1,81],[1,5,82],[2,10,83],[3,15,84],[5,25,86],[7,35,88],[10,50,91],[13,65,94]],
-    "Impossible":          [[null,1,81],[null,1,81],[null,1,81],[1,5,82],[2,10,83],[3,15,84],[5,25,86],[7,35,88],[10,50,91]]
-  };
+const SHARED_THREAD_DATA = {
+  aspirations: [
+    'Master my Thread.',
+    'Protect my community.',
+    'Protect someone important to me.',
+    'Discover forbidden knowledge.',
+    'Find the truth.',
+    'Understand the Weave.',
+    'Build something lasting.',
+    'Change the world.',
+    'Found a school.',
+    'Pass my knowledge to the next generation.',
+    'Destroy a rival faction.',
+    'Defeat a great threat.',
+    'Free those who are oppressed.',
+    'Restore what was lost.',
+    'Rebuild my home.',
+    'Become free.',
+    'Earn redemption.',
+    'Fulfill a promise.',
+    'Leave a legacy.',
+    'Reach a place no one has reached before.'
+  ],
 
-  const EVENT_FOCUS_TABLE = [
-    { max: 5,   label: "Remote Event" },
-    { max: 10,  label: "Ambiguous Event" },
-    { max: 20,  label: "New NPC" },
-    { max: 40,  label: "NPC Action" },
-    { max: 45,  label: "NPC Negative" },
-    { max: 50,  label: "NPC Positive" },
-    { max: 55,  label: "Move Toward a Thread" },
-    { max: 65,  label: "Move Away From a Thread" },
-    { max: 70,  label: "Close a Thread" },
-    { max: 80,  label: "PC Negative" },
-    { max: 85,  label: "PC Positive" },
-    { max: 100, label: "Current Context" }
-  ];
+  formativeExperiences: [
+    { key: 'liberation', label: 'Liberation', desc: 'Someone freed you, your family, or your people from oppression.', polarity: 'inspiration' },
+    { key: 'kindness', label: 'Kindness', desc: 'A stranger showed you compassion when they had no reason to.', polarity: 'inspiration' },
+    { key: 'sacrifice', label: 'Sacrifice', desc: 'Someone gave up something precious for your sake.', polarity: 'inspiration' },
+    { key: 'discovery', label: 'Discovery', desc: 'You witnessed a truth, place, or wonder that changed your understanding of the world.', polarity: 'inspiration' },
+    { key: 'belonging', label: 'Belonging', desc: 'A person or community accepted you when you needed it most.', polarity: 'inspiration' },
+    { key: 'mentorship', label: 'Mentorship', desc: 'A teacher, elder, or guide invested in your future.', polarity: 'inspiration' },
+    { key: 'survival', label: 'Survival', desc: 'You overcame tremendous hardship and emerged stronger.', polarity: 'inspiration' },
+    { key: 'reconciliation', label: 'Reconciliation', desc: 'An old wound was healed or an enemy became an ally.', polarity: 'inspiration' },
+    { key: 'inheritance', label: 'Inheritance', desc: 'You were entrusted with a responsibility, tradition, or legacy.', polarity: 'inspiration' },
+    { key: 'awakening', label: 'Awakening', desc: 'The moment you first touched the Weave transformed your life.', polarity: 'inspiration' },
+    { key: 'loss', label: 'Loss', desc: 'Someone important is gone.', polarity: 'burden' },
+    { key: 'failure', label: 'Failure', desc: 'Your mistake caused lasting consequences.', polarity: 'burden' },
+    { key: 'betrayal', label: 'Betrayal', desc: 'Someone you trusted broke that trust.', polarity: 'burden' },
+    { key: 'exile', label: 'Exile', desc: 'You lost your home, status, or place in the world.', polarity: 'burden' },
+    { key: 'debt', label: 'Debt', desc: 'You owe something that has not yet been repaid.', polarity: 'burden' },
+    { key: 'shame', label: 'Shame', desc: 'There is something in your past you cannot forgive.', polarity: 'burden' },
+    { key: 'obsession', label: 'Obsession', desc: 'You cannot stop pursuing a particular person, truth, or goal.', polarity: 'burden' },
+    { key: 'fear', label: 'Fear', desc: 'You witnessed something terrible and never recovered from it.', polarity: 'burden' },
+    { key: 'ruin', label: 'Ruin', desc: 'Something you valued was destroyed.', polarity: 'burden' },
+    { key: 'responsibility', label: 'Responsibility', desc: 'You carry a burden that should never have been yours alone.', polarity: 'burden' }
+  ],
 
-  const CHAOS_COLORS = [
-    "#4f9d84", "#5a9d78", "#7a9d63", "#9a9855", "#c2994f",
-    "#c98850", "#c1724f", "#b95c4c", "#b5453f"
-  ];
-
-  // Which Event Focus results point at the Characters List vs. the Threads List.
-  const NPC_FOCI = new Set(["New NPC", "NPC Action", "NPC Negative", "NPC Positive"]);
-  const THREAD_FOCI = new Set(["Move Toward a Thread", "Move Away From a Thread", "Close a Thread"]);
-
-  // ================= EVENT MEANING DATA =================
-  // Actions Meaning Table: Action 1 (verb) + Action 2 (concept), each d100.
-  const ACTION_1 = [
-    "Abandon","Accompany","Activate","Agree","Ambush","Arrive","Assist","Attack","Attain","Bargain",
-    "Befriend","Bestow","Betray","Block","Break","Carry","Celebrate","Change","Close","Combine",
-    "Communicate","Conceal","Continue","Control","Create","Deceive","Decrease","Defend","Delay","Deny",
-    "Depart","Deposit","Destroy","Dispute","Disrupt","Distrust","Divide","Drop","Easy","Energize",
-    "Escape","Expose","Fail","Fight","Flee","Free","Guide","Harm","Heal","Hinder",
-    "Imitate","Imprison","Increase","Indulge","Inform","Inquire","Inspect","Invade","Leave","Lure",
-    "Misuse","Move","Neglect","Observe","Open","Oppose","Overthrow","Praise","Proceed","Protect",
-    "Punish","Pursue","Recruit","Refuse","Release","Relinquish","Repair","Repulse","Return","Reward",
-    "Ruin","Separate","Start","Stop","Strange","Struggle","Succeed","Support","Suppress","Take",
-    "Threaten","Transform","Trap","Travel","Triumph","Truce","Trust","Use","Usurp","Waste"
-  ];
-  const ACTION_2 = [
-    "Advantage","Adversity","Agreement","Animal","Attention","Balance","Battle","Benefits","Building","Burden",
-    "Bureaucracy","Business","Chaos","Comfort","Completion","Conflict","Cooperation","Danger","Defense","Depletion",
-    "Disadvantage","Distraction","Elements","Emotion","Enemy","Energy","Environment","Expectation","Exterior","Extravagance",
-    "Failure","Fame","Fear","Freedom","Friend","Goal","Group","Health","Hindrance","Home",
-    "Hope","Idea","Illness","Illusion","Individual","Information","Innocent","Intellect","Interior","Investment",
-    "Leadership","Legal","Location","Military","Misfortune","Mundane","Nature","Needs","News","Normal",
-    "Object","Obscurity","Official","Opposition","Outside","Pain","Path","Peace","People","Personal",
-    "Physical","Plot","Portal","Possessions","Poverty","Power","Prison","Project","Protection","Reassurance",
-    "Representative","Riches","Safety","Strength","Success","Suffering","Surprise","Tactic","Technology","Tension",
-    "Time","Trial","Value","Vehicle","Victory","Vulnerability","Weapon","Weather","Work","Wound"
-  ];
-  // Descriptions Meaning Table: Descriptor 1 (adverb) + Descriptor 2 (adjective), each d100.
-  const DESCRIPTOR_1 = [
-    "Adventurously","Aggressively","Anxiously","Awkwardly","Beautifully","Bleakly","Boldly","Bravely","Busily","Calmly",
-    "Carefully","Carelessly","Cautiously","Ceaselessly","Cheerfully","Combatively","Coolly","Crazily","Curiously","Dangerously",
-    "Defiantly","Deliberately","Delicately","Delightfully","Dimly","Efficiently","Emotionally","Energetically","Enormously","Enthusiastically",
-    "Excitedly","Fearfully","Ferociously","Fiercely","Foolishly","Fortunately","Frantically","Freely","Frighteningly","Fully",
-    "Generously","Gently","Gladly","Gracefully","Gratefully","Happily","Hastily","Healthily","Helpfully","Helplessly",
-    "Hopelessly","Innocently","Intensely","Interestingly","Irritatingly","Joyfully","Kindly","Lazily","Lightly","Loosely",
-    "Loudly","Lovingly","Loyally","Majestically","Meaningfully","Mechanically","Mildly","Miserably","Mockingly","Mysteriously",
-    "Naturally","Neatly","Nicely","Oddly","Offensively","Officially","Partially","Passively","Peacefully","Perfectly",
-    "Playfully","Politely","Positively","Powerfully","Quaintly","Quarrelsomely","Quietly","Roughly","Rudely","Ruthlessly",
-    "Slowly","Softly","Strangely","Swiftly","Threateningly","Timidly","Very","Violently","Wildly","Yieldingly"
-  ];
-  const DESCRIPTOR_2 = [
-    "Abnormal","Amusing","Artificial","Average","Beautiful","Bizarre","Boring","Bright","Broken","Clean",
-    "Cold","Colorful","Colorless","Comforting","Creepy","Cute","Damaged","Dark","Defeated","Dirty",
-    "Disagreeable","Dry","Dull","Empty","Enormous","Extraordinary","Extravagant","Faded","Familiar","Fancy",
-    "Feeble","Festive","Flawless","Forlorn","Fragile","Fragrant","Fresh","Full","Glorious","Graceful",
-    "Hard","Harsh","Healthy","Heavy","Historical","Horrible","Important","Interesting","Juvenile","Lacking",
-    "Large","Lavish","Lean","Less","Lethal","Lively","Lonely","Lovely","Magnificent","Mature",
-    "Messy","Mighty","Military","Modern","Mundane","Mysterious","Natural","Normal","Odd","Old",
-    "Pale","Peaceful","Petite","Plain","Poor","Powerful","Protective","Quaint","Rare","Reassuring",
-    "Remarkable","Rotten","Rough","Ruined","Rustic","Scary","Shocking","Simple","Small","Smooth",
-    "Soft","Strong","Stylish","Unpleasant","Valuable","Vibrant","Warm","Watery","Weak","Young"
-  ];
-
-  const MEANING_TABLES = {
-    "Actions":      { t1: ACTION_1,     t2: ACTION_2 },
-    "Descriptions": { t1: DESCRIPTOR_1, t2: DESCRIPTOR_2 }
-  };
-  const MEANING_TYPES = ["Actions", "Descriptions"];
-
-  // Config for the two Adventure Lists — shared logic keyed by "threads" / "characters".
-  const LIST_CONFIG = {
-    threads:    { pickClass: "thread-pick",    placeholder: "Add a thread…" },
-    characters: { pickClass: "character-pick", placeholder: "Add a character…" }
-  };
-
-  // ================= NPC CREATOR (ÜNE) DATA =================
-  // Chart 1: NPC Modifier, d100.
-  const NPC_MODIFIER = [
-    "superfluous","addicted","conformist","nefarious","sensible","untrained","romantic","unreasonable","skilled","neglectful",
-    "lively","forthright","idealistic","unsupportive","rational","coarse","foolish","cunning","delightful","miserly",
-    "inept","banal","logical","subtle","reputable","wicked","lazy","pessimistic","solemn","habitual",
-    "meek","helpful","unconcerned","generous","docile","cheery","pragmatic","serene","thoughtful","hopeless",
-    "pleasant","insensitive","titled","inexperienced","prying","oblivious","refined","indispensable","scholarly","conservative",
-    "uncouth","willful","indifferent","fickle","elderly","sinful","naive","privileged","glum","likable",
-    "lethargic","defiant","obnoxious","insightful","tactless","fanatic","plebeian","childish","pious","uneducated",
-    "inconsiderate","cultured","revolting","curious","touchy","needy","dignified","pushy","kind","corrupt",
-    "jovial","shrewd","liberal","compliant","destitute","conniving","careful","alluring","defective","optimistic",
-    "affluent","despondent","mindless","passionate","devoted","established","unseemly","dependable","righteous","confident"
-  ];
-  // Chart 2: NPC Noun, d100.
-  const NPC_NOUN = [
-    "gypsy","witch","merchant","expert","commoner","judge","ranger","occultist","reverend","thug",
-    "drifter","journeyman","statesman","astrologer","duelist","jack-of-all-trades","aristocrat","preacher","artisan","rogue",
-    "missionary","outcast","mercenary","caretaker","hermit","orator","chieftain","pioneer","burglar","vicar",
-    "officer","explorer","warden","outlaw","adept","bum","sorcerer","laborer","master","ascendant",
-    "villager","magus","conscript","worker","actor","herald","highwayman","fortune-hunter","governor","scrapper",
-    "monk","homemaker","recluse","steward","polymath","magician","traveler","vagrant","apprentice","politician",
-    "mediator","crook","civilian","activist","hero","champion","cleric","slave","gunman","clairvoyant",
-    "patriarch","shopkeeper","crone","adventurer","soldier","entertainer","craftsman","scientist","ascetic","superior",
-    "performer","magister","serf","brute","inquisitor","lord","villain","professor","servant","charmer",
-    "globetrotter","sniper","courtier","priest","tradesman","hitman","wizard","beggar","tradesman","warrior"
-  ];
-  // Chart 3: NPC Power Level. Cumulative upper-bound thresholds per R-level (1-5)
-  // for [Much Weaker, Slightly Weaker, Comparable, Slightly Stronger, Much Stronger].
-  // The book's row 1 has a one-point printed overlap between Comparable/Slightly
-  // Stronger (11-90 vs 89-98); resolved here the same way the rest of this app
-  // reads charts — first threshold met, in order — same fix used for the Fate Chart.
-  const POWER_THRESHOLDS = {
-    1: [2,10,90,98,100],
-    2: [4,15,85,96,100],
-    3: [5,20,80,95,100],
-    4: [8,25,75,92,100],
-    5: [12,30,70,88,100]
-  };
-  const POWER_LABELS = ["Much Weaker","Slightly Weaker","Comparable","Slightly Stronger","Much Stronger"];
-  function evaluatePower(rLevel, roll){
-    const thresholds = POWER_THRESHOLDS[rLevel];
-    for (let i=0;i<thresholds.length;i++){
-      if (roll <= thresholds[i]) return POWER_LABELS[i];
+  axisOrder: ['scale', 'range', 'ramp', 'precision', 'duration'],
+  axisPool: [3, 2, 2, 1, 1],
+  axes: {
+    scale: {
+      label: 'Scale',
+      hint: 'How much of the world your Thread touches.',
+      levels: [
+        'A tiny amount, simple detail, or very minor effect',
+        'One person or small object',
+        'Several people, a large object, or a small room',
+        'A group, large room, vehicle, or substantial structure',
+        'A building, large creature, or significant area',
+        'A street, large structure, or section of a settlement',
+        'A neighborhood, fortress, or similarly large area'
+      ]
+    },
+    range: {
+      label: 'Range',
+      hint: 'How far your Thread reaches.',
+      levels: ['Touch', '10 ft', '30 ft', '100 ft', '300 ft', '1 km', '5 km']
+    },
+    ramp: {
+      label: 'Ramp Time',
+      hint: 'How long you need to bring an effect to bear.',
+      levels: ['About 10 minutes', 'About 1 minute', 'About 10 seconds', 'About 3 seconds', 'About 1 second', 'Immediate', 'Reflexive']
+    },
+    precision: {
+      label: 'Precision',
+      hint: 'How exactly you can target it.',
+      levels: ['Broad area', 'Person-sized', 'Small objects', 'Specific features', 'Precise detail', 'Several, changing precise details']
+    },
+    duration: {
+      label: 'Duration',
+      hint: 'How long the effect lasts.',
+      levels: ['Instant burst', 'Few seconds', '1 minute', '10 minutes', '1 hour', '1 day', 'Until dismissed']
     }
-    return POWER_LABELS[POWER_LABELS.length-1];
-  }
-  // Chart 4: NPC Motivation Verb, d100.
-  const MOTIVATION_VERB = [
-    "advise","obtain","attempt","spoil","oppress","interact","create","abduct","promote","conceive",
-    "blight","progress","distress","possess","record","embrace","contact","pursue","associate","prepare",
-    "shepherd","abuse","indulge","chronicle","fulfill","drive","review","aid","follow","advance",
-    "guard","conquer","hinder","plunder","construct","encourage","agonize","comprehend","administer","relate",
-    "take","discover","deter","acquire","damage","publicize","burden","advocate","implement","understand",
-    "collaborate","strive","complete","compel","join","assist","defile","produce","institute","account",
-    "work","accompany","offend","guide","learn","persecute","communicate","process","report","develop",
-    "steal","suggest","weaken","achieve","secure","inform","patronize","depress","determine","seek",
-    "manage","suppress","proclaim","operate","access","refine","compose","undermine","explain","discourage",
-    "attend","detect","execute","maintain","realize","convey","rob","establish","overthrow","support"
-  ];
-  // Chart 5: NPC Motivation Noun, d100. Columns are 1-20/21-40/41-60/61-80/81-100;
-  // rerolling only this Noun (never the Verb) if it lands in the same column as
-  // any of this NPC's already-accepted Motivation Nouns.
-  const MOTIVATION_NOUN = [
-    "wealth","hardship","affluence","resources","prosperity","poverty","opulence","deprivation","success","distress",
-    "contraband","music","literature","technology","alcohol","medicines","beauty","strength","intelligence","force",
-    "the wealthy","the populous","enemies","the public","religion","the poor","family","the elite","academia","the forsaken",
-    "the law","the government","the downtrodden","friends","criminals","allies","secret societies","the world","military","the church",
-    "dreams","discretion","love","freedom","pain","faith","slavery","enlightenment","racism","sensuality",
-    "dissonance","peace","discrimination","disbelief","pleasure","hate","happiness","servitude","harmony","justice",
-    "gluttony","lust","envy","greed","laziness","wrath","pride","purity","moderation","vigilance",
-    "zeal","composure","charity","modesty","atrocities","cowardice","narcissism","compassion","valor","patience",
-    "advice","propaganda","science","knowledge","communications","lies","myths","riddles","stories","legends",
-    "industry","new religions","progress","animals","ghosts","magic","nature","old religions","expertise","spirits"
-  ];
-  function motivationColumn(roll){ return Math.floor((roll-1)/20); }
-  function titleCase(s){ return s.replace(/\b\w/g, c => c.toUpperCase()); }
+  },
 
-  // Chart 6: NPC Binary Response. [very-affirmative max, affirmative max, negative max]
-  // for each Relationship (row) × Conversation Mood (column).
-  const RELATIONSHIPS = ["loved","friendly","peaceful","neutral","distrustful","hostile","hated"];
-  const MOODS = ["withdrawn","guarded","cautious","neutral","sociable","helpful","forthcoming"];
-  const RESPONSE_CHART = {
-    loved:       [[5,30,87],[9,45,90],[12,60,93],[15,75,95],[18,81,96],[21,88,97],[25,95,99]],
-    friendly:    [[4,25,85],[8,38,88],[10,51,91],[13,64,93],[16,73,94],[19,82,96],[23,91,98]],
-    peaceful:    [[4,21,83],[7,33,86],[9,45,89],[11,56,91],[14,65,93],[17,76,95],[21,87,98]],
-    neutral:     [[3,17,81],[6,28,84],[8,39,87],[10,50,90],[13,61,92],[16,72,94],[19,83,97]],
-    distrustful: [[2,13,79],[5,24,83],[7,35,86],[9,44,89],[11,55,91],[14,67,93],[17,79,96]],
-    hostile:     [[2,9,77],[4,18,81],[6,27,84],[7,36,87],[9,49,90],[12,62,92],[15,75,96]],
-    hated:       [[1,5,75],[3,12,79],[4,19,82],[5,25,85],[7,40,88],[10,55,91],[13,70,95]]
-  };
-  function evaluateResponse(relationship, mood, roll){
-    const moodIdx = MOODS.indexOf(mood);
-    const [veryAff, aff, neg] = RESPONSE_CHART[relationship][moodIdx];
-    if (roll <= veryAff) return "Very Affirmative";
-    if (roll <= aff) return "Affirmative";
-    if (roll <= neg) return "Negative";
-    return "Very Negative";
-  }
+  skills: ['Athletics', 'Fighting', 'Influence', 'Medicine', 'Scouting', 'Craftwork', 'Investigation', 'Scholarship', 'Technology', 'Law'],
 
-  // Chart 7: NPC Bearing. 8 demeanors (d100 range or d8 index), each with 10
-  // Bearing words (d10 index).
-  const DEMEANORS = [
-    { name: "Scheming",    min: 1,   max: 12,  words: ["intent","bargain","means","proposition","plan","compromise","agenda","arrangement","negotiation","plot"] },
-    { name: "Insane",      min: 13,  max: 24,  words: ["madness","fear","accident","chaos","idiocy","illusion","turmoil","confusion","façade","bewilderment"] },
-    { name: "Friendly",    min: 25,  max: 36,  words: ["alliance","comfort","gratitude","shelter","happiness","support","promise","delight","aid","celebration"] },
-    { name: "Hostile",     min: 37,  max: 49,  words: ["death","capture","judgment","combat","surrender","rage","resentment","submission","injury","destruction"] },
-    { name: "Inquisitive", min: 50,  max: 62,  words: ["questions","investigation","interest","demand","suspicion","request","curiosity","skepticism","command","petition"] },
-    { name: "Knowing",     min: 63,  max: 75,  words: ["report","effects","examination","records","account","news","history","telling","discourse","speech"] },
-    { name: "Mysterious",  min: 76,  max: 88,  words: ["rumor","uncertainty","secrets","misdirection","whispers","lies","shadows","enigma","obscurity","conundrum"] },
-    { name: "Prejudiced",  min: 89,  max: 100, words: ["reputation","doubt","bias","dislike","partiality","belief","view","discrimination","assessment","difference"] }
-  ];
-  const DEMEANOR_NAMES = ["Random", ...DEMEANORS.map(d => d.name)];
-  function getDemeanorByRoll(roll){ return DEMEANORS.find(d => roll >= d.min && roll <= d.max); }
-  function getDemeanorByName(name){ return DEMEANORS.find(d => d.name === name); }
+  harm: { max: 6, badAt: 3, badLabel: 'Bloodied' },
+  strain: { max: 4, badAt: 2, badLabel: 'Stressed' },
 
-  // Chart 8: NPC Focus, d100.
-  const NPC_FOCUS_TABLE = [
-    { max: 3,   label: "current scene" },   { max: 6,   label: "last story" },     { max: 9,   label: "equipment" },
-    { max: 12,  label: "parents" },         { max: 15,  label: "history" },        { max: 18,  label: "retainers" },
-    { max: 21,  label: "wealth" },          { max: 24,  label: "relics" },         { max: 27,  label: "last action" },
-    { max: 30,  label: "skills" },          { max: 33,  label: "superiors" },      { max: 36,  label: "fame" },
-    { max: 39,  label: "campaign" },        { max: 42,  label: "future action" },  { max: 45,  label: "friends" },
-    { max: 48,  label: "allies" },          { max: 51,  label: "last scene" },     { max: 54,  label: "contacts" },
-    { max: 57,  label: "flaws" },           { max: 60,  label: "antagonist" },     { max: 63,  label: "rewards" },
-    { max: 66,  label: "experience" },      { max: 69,  label: "knowledge" },      { max: 72,  label: "recent scene" },
-    { max: 75,  label: "community" },       { max: 78,  label: "treasure" },       { max: 81,  label: "the character" },
-    { max: 84,  label: "current story" },   { max: 87,  label: "family" },         { max: 90,  label: "power" },
-    { max: 93,  label: "weapons" },         { max: 96,  label: "previous scene" }, { max: 100, label: "enemy" }
-  ];
-  function getFocus(roll){
-    for (const row of NPC_FOCUS_TABLE){ if (roll <= row.max) return row.label; }
-    return NPC_FOCUS_TABLE[NPC_FOCUS_TABLE.length-1].label;
-  }
+  /* Each Debility maps to exactly one stat and subtracts 1 from it while active.
+     This mapping is a best-effort read of the source sheet — easy to re-key if
+     you had a different pairing in mind. Shared across every Thread. */
+  debilities: [
+    { key: 'exhausted', label: 'Exhausted', blurb: 'Worn thin in body.', stat: 'scale' },
+    { key: 'overextended', label: 'Overextended', blurb: 'Pushed your Thread past its limit.', stat: 'range' },
+    { key: 'sluggish', label: 'Sluggish', blurb: 'Slowed, a beat behind.', stat: 'ramp' },
+    { key: 'unstable', label: 'Unstable', blurb: 'Your effects flicker and slip.', stat: 'precision' },
+    { key: 'disoriented', label: 'Disoriented', blurb: 'Senses scrambled.', stat: 'duration' }
+  ],
 
-  const STORAGE_KEY = "fate-chart-oracle-state";
-  const MAX_LOG = 20;
-  const MAX_LIST_LOG = 10;
-  const MAX_LIST_SIZE = 25;
+  karma: { maxPerRoll: 2 }
+};
 
-  let state = {
-    activeTab: "fate",
-    odds: "50/50",
-    chaos: 5,
-    history: [],
-    meaningTable: "Actions",
-    meaningHistory: [],
-    threads: [],
-    characters: [],
-    threadsLog: [],
-    charactersLog: [],
-    rLevel: 3,
-    npcLog: [],
-    relationship: "neutral",
-    mood: "neutral",
-    responseLog: [],
-    demeanor: "Random",
-    discussionLog: []
-  };
-
-  // ================= Storage =================
-  // window.storage only exists inside the Claude.ai artifact sandbox. When
-  // this file is hosted anywhere else (e.g. GitHub Pages), we fall back to
-  // the browser's own localStorage — no server or database needed, since
-  // this is single-user, single-device data.
-  async function loadState(){
-    try{
-      if (window.storage){
-        const res = await window.storage.get(STORAGE_KEY);
-        if (res && res.value){
-          state = Object.assign(state, JSON.parse(res.value));
-        }
-      } else if (window.localStorage){
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw){
-          state = Object.assign(state, JSON.parse(raw));
-        }
-      }
-    }catch(e){ /* no saved state yet, or storage unavailable — use defaults */ }
-    // Migrate entries saved by older versions of this app, where threads/
-    // characters were plain strings instead of {text, notes} objects.
-    ["threads","characters"].forEach(key => {
-      state[key] = (state[key] || []).map(item =>
-        typeof item === "string" ? { text: item, notes: "" } : item
-      );
-    });
-    renderAll();
-    switchTab(state.activeTab);
-  }
-
-  async function saveState(){
-    try{
-      if (window.storage){
-        await window.storage.set(STORAGE_KEY, JSON.stringify(state));
-      } else if (window.localStorage){
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      }
-    }catch(e){ /* ignore — app still works without persistence */ }
-  }
-
-  // ================= Core dice logic =================
-  function rollD100(){
-    return Math.floor(Math.random()*100) + 1;
-  }
-
-  function evaluateFate(odds, chaos, roll){
-    const [excYesMax, yesMax, excNoMin] = FATE_CHART[odds][chaos-1];
-    let result;
-    if (excYesMax !== null && roll <= excYesMax) result = "Exceptional Yes";
-    else if (roll <= yesMax) result = "Yes";
-    else if (excNoMin !== null && roll >= excNoMin) result = "Exceptional No";
-    else result = "No";
-    return { result, excYesMax, yesMax, excNoMin };
-  }
-
-  function checkRandomEvent(roll, chaos){
-    const isDouble = roll % 11 === 0 && roll >= 11 && roll <= 99;
-    if (!isDouble) return false;
-    const digit = roll / 11;
-    return digit <= chaos;
-  }
-
-  function getEventFocus(roll){
-    for (const row of EVENT_FOCUS_TABLE){
-      if (roll <= row.max) return row.label;
-    }
-    return EVENT_FOCUS_TABLE[EVENT_FOCUS_TABLE.length-1].label;
-  }
-
-  function rollMeaning(tableName){
-    const t = MEANING_TABLES[tableName];
-    const r1 = rollD100();
-    const r2 = rollD100();
-    return { r1, r2, w1: t.t1[r1-1], w2: t.t2[r2-1] };
-  }
-
-  function fmt(n){ return n === null ? "not possible" : n; }
-
-  // ================= Tabs =================
-  function switchTab(tab){
-    state.activeTab = tab;
-    document.getElementById("panel-fate").hidden = tab !== "fate";
-    document.getElementById("panel-meaning").hidden = tab !== "meaning";
-    document.getElementById("panel-lists").hidden = tab !== "lists";
-    document.getElementById("panel-npc").hidden = tab !== "npc";
-    document.querySelectorAll(".tab-btn").forEach(b => {
-      b.classList.toggle("active", b.dataset.tab === tab);
-    });
-  }
-  document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => { switchTab(btn.dataset.tab); saveState(); });
+/* Builds one playbook from the shared chassis above, overriding only what
+   actually differs between Threads: id, display name, Puntastic name(s),
+   and the two starting abilities. */
+function makeThread(id, name, punNames, abilities) {
+  return Object.assign({}, SHARED_THREAD_DATA, {
+    id: id,
+    name: name,
+    punNames: punNames,
+    abilities: abilities
   });
+}
 
-  // ================= Rendering: Fate Chart tab =================
-  function renderOddsPills(){
-    const container = document.getElementById("oddsPills");
-    container.innerHTML = "";
-    ODDS_LEVELS.forEach(level => {
-      const btn = document.createElement("button");
-      btn.className = "pill" + (level === state.odds ? " selected" : "");
-      btn.textContent = level;
-      btn.setAttribute("aria-pressed", level === state.odds ? "true" : "false");
-      btn.addEventListener("click", () => {
-        state.odds = level;
-        saveState();
-        renderOddsPills();
-      });
-      container.appendChild(btn);
-    });
+const PLAYBOOKS = {
+  light: makeThread('light', 'Light', ['Ray Dient', 'Sol Stice', 'Lu Minary', 'Bree Lliant', 'Flo Rescent', 'Clare Ity'], [
+    {
+      key: 'distantSight',
+      name: 'Distant Sight',
+      body: 'You can perceive fine details at extreme distances.',
+      bonus: 'Gain +1 when using Light to investigate, search, track, or identify something.'
+    },
+    {
+      key: 'veilInShadow',
+      name: 'Veil in Shadow',
+      body: 'You may subtly bend ambient light around yourself and nearby allies, obscuring details, disguising movements, and softening outlines without rolling. This does not make anyone invisible, but it can conceal identities, equipment, and precise actions.',
+      bonus: 'Gain +1 when using Light to protect, conceal, or extract others from danger.'
+    }
+  ]),
+
+  space: makeThread('space', 'Space', ['Miles Ahead'], [
+    {
+      key: 'pathwalker',
+      name: 'Pathwalker',
+      body: 'You instinctively understand the shortest route between two locations. You can always identify the quickest traversable path to a destination you can perceive.',
+      bonus: 'When using Space to move yourself or others, gain +1 to the roll.'
+    },
+    {
+      key: 'horizonKeeper',
+      name: 'Horizon Keeper',
+      body: 'You always know the relative position and direction of places you have previously visited.',
+      bonus: 'When using Space to prevent movement, pursuit, or escape, gain +1 to the roll.'
+    }
+  ]),
+
+  mass: makeThread('mass', 'Mass', ['Hugh Jass'], [
+    {
+      key: 'livingAnchor',
+      name: 'Living Anchor',
+      body: 'You may increase your own effective mass without rolling. While doing so, you cannot be easily pushed, knocked over, carried away, or displaced by ordinary forces.',
+      bonus: 'Gain +1 when using Mass to resist movement, impacts, collapse, or forced repositioning.'
+    },
+    {
+      key: 'featherstep',
+      name: 'Featherstep',
+      body: 'You may reduce your own effective mass without rolling. You leave lighter footprints, suffer no harm from ordinary falls, and can move across surfaces that would not normally support your weight.',
+      bonus: 'Gain +1 when using Mass to travel, climb, leap, descend, or maneuver through difficult terrain.'
+    }
+  ]),
+
+  heat: makeThread('heat', 'Heat', ['Bernie Cinders'], [
+    {
+      key: 'hearthkeeper',
+      name: 'Hearthkeeper',
+      body: 'You may comfortably withstand ordinary environmental heat and cold, and can extend this protection to nearby companions without rolling.',
+      bonus: 'Gain +1 when using Heat to protect, preserve, stabilize, or sustain people and resources.'
+    },
+    {
+      key: 'emberhand',
+      name: 'Emberhand',
+      body: 'You may create, extinguish, or manipulate small sources of heat without rolling, provided they would not cause significant harm.',
+      bonus: 'Gain +1 when using Heat to damage, weaken, melt, burn, or otherwise alter the environment through thermal force.'
+    }
+  ]),
+
+  time: makeThread('time', 'Time', ['Justin Time'], [
+    {
+      key: 'borrowedMoments',
+      name: 'Borrowed Moments',
+      body: 'You constantly make tiny adjustments to your own flow of time. As a result, you require less food, sleep, and rest than most people. You may complete routine activities that only affect yourself in a fraction of the expected time.',
+      bonus: 'Gain +1 when using Time to accelerate, decelerate, coordinate, delay, or otherwise alter the timing of people, objects, or events around you.'
+    },
+    {
+      key: 'acceleratedReflexes',
+      name: 'Accelerated Reflexes',
+      body: 'You instinctively perceive tiny changes in timing and motion. You can never be surprised by an obvious physical action that you could reasonably perceive.',
+      bonus: 'Gain +1 when using Time to react, evade, intercept, or act before someone else.'
+    }
+  ]),
+
+  matter: makeThread('matter', 'Matter', ['Al Khemist'], [
+    {
+      key: 'appraisersEye',
+      name: 'Appraiser\u2019s Eye',
+      body: 'By touching or closely examining a material, you can determine its basic composition, major impurities, and structural weaknesses without rolling.',
+      bonus: 'Gain +1 when using Matter to analyze, identify, refine, repair, or improve materials.'
+    },
+    {
+      key: 'sculptorOfForms',
+      name: 'Sculptor of Forms',
+      body: 'You may perform minor reshaping of non-living materials within your Magnitude without rolling, provided you are not changing their composition.',
+      bonus: 'Gain +1 when using Matter to reshape, reinforce, alter, or construct physical objects.'
+    }
+  ]),
+
+  charge: makeThread('charge', 'Charge', ['Farrah Day'], [
+    {
+      key: 'stormcaller',
+      name: 'Stormcaller',
+      body: 'You can always create small electrical effects without rolling.',
+      bonus: 'When creating an electrical discharge under pressure, gain 1 temporary Karma for that action.'
+    },
+    {
+      key: 'livingMagnet',
+      name: 'Living Magnet',
+      body: 'You can always sense nearby metal objects.',
+      bonus: 'When manipulating metal through Charge, gain +1 to the roll.'
+    }
+  ])
+};
+
+const PLAYBOOK_LIST = Object.keys(PLAYBOOKS); // extend this object to add more Threads later
+
+/* ---------------- Storage abstraction ---------------- */
+/* Prefers the `db` capability (private per-viewer docs under
+   data/users/<id>/); falls back to localStorage when db/user
+   aren't available so the app still works. */
+
+const Store = (function () {
+  const LOCAL_KEY = 'weaveborn_characters_v1';
+  let backend = null; // 'db' | 'local'
+  let col = null;
+  let listeners = [];
+  let cache = [];
+
+  function notify() {
+    listeners.forEach(function (fn) { fn(cache.slice()); });
   }
 
-  function renderChaosRow(){
-    const container = document.getElementById("chaosRow");
-    container.innerHTML = "";
-    document.getElementById("chaosValue").textContent = state.chaos;
-    for (let i=1; i<=9; i++){
-      const btn = document.createElement("button");
-      btn.className = "chaos-btn" + (i === state.chaos ? " selected" : "");
-      btn.textContent = i;
-      btn.setAttribute("aria-pressed", i === state.chaos ? "true" : "false");
-      if (i === state.chaos){
-        btn.style.background = CHAOS_COLORS[i-1];
-        btn.style.borderColor = CHAOS_COLORS[i-1];
+  function localList() {
+    try {
+      const raw = window.localStorage.getItem(LOCAL_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function localWrite(list) {
+    try {
+      window.localStorage.setItem(LOCAL_KEY, JSON.stringify(list));
+    } catch (e) { /* storage unavailable; ignore */ }
+  }
+
+  async function init() {
+    try {
+      const dbCap = window.claude ? await window.claude.use('db') : null;
+      const userCap = window.claude ? await window.claude.use('user') : null;
+      if (dbCap && userCap) {
+        const uid = await userCap.id();
+        if (uid) {
+          backend = 'db';
+          col = dbCap.collection('data/users/' + uid);
+          col.onSnapshot(function (snap) {
+            cache = snap.docs.map(function (d) { return d.data(); });
+            notify();
+          }, function () {
+            // subscription died; keep whatever we last had
+          });
+          return;
+        }
       }
-      btn.addEventListener("click", () => {
-        state.chaos = i;
-        saveState();
-        renderChaosRow();
-      });
-      container.appendChild(btn);
-    }
+    } catch (e) { /* fall through to local */ }
+    backend = 'local';
+    cache = localList();
+    notify();
   }
 
-  function renderLog(){
-    const list = document.getElementById("logList");
-    list.innerHTML = "";
-    if (state.history.length === 0){
-      const li = document.createElement("li");
-      li.className = "empty-log";
-      li.textContent = "No rolls yet.";
-      list.appendChild(li);
-      return;
-    }
-    state.history.forEach(entry => {
-      const li = document.createElement("li");
-      li.className = "log-item";
-      const answerClass = entry.result.includes("Yes") ? "yes" : "no";
-      li.innerHTML = `
-        <span>
-          <span class="log-main">${entry.odds} · CF ${entry.chaos}</span><br>
-          rolled ${entry.roll}
-          ${entry.event ? `<span class="log-event">⟡ Random Event — ${entry.event}</span>` : ""}
-        </span>
-        <span class="log-answer ${answerClass}">${entry.result}</span>
-      `;
-      list.appendChild(li);
-    });
-  }
-
-  // ================= Rendering: Event Meaning tab =================
-  function renderMeaningPills(){
-    const container = document.getElementById("meaningPills");
-    container.innerHTML = "";
-    MEANING_TYPES.forEach(name => {
-      const btn = document.createElement("button");
-      btn.className = "pill" + (name === state.meaningTable ? " selected" : "");
-      btn.textContent = name;
-      btn.setAttribute("aria-pressed", name === state.meaningTable ? "true" : "false");
-      btn.addEventListener("click", () => {
-        state.meaningTable = name;
-        saveState();
-        renderMeaningPills();
-      });
-      container.appendChild(btn);
-    });
-  }
-
-  function renderMeaningLog(){
-    const list = document.getElementById("meaningLogList");
-    list.innerHTML = "";
-    if (state.meaningHistory.length === 0){
-      const li = document.createElement("li");
-      li.className = "empty-log";
-      li.textContent = "No rolls yet.";
-      list.appendChild(li);
-      return;
-    }
-    state.meaningHistory.forEach(entry => {
-      const li = document.createElement("li");
-      li.className = "log-item";
-      li.innerHTML = `
-        <span>
-          <span class="log-main">${entry.table}</span>
-          <span class="log-sub">rolled ${entry.r1}, ${entry.r2}</span>
-        </span>
-        <span class="log-answer meaning">${entry.w1} + ${entry.w2}</span>
-      `;
-      list.appendChild(li);
-    });
-  }
-
-  // ================= Rendering & logic: Adventure Lists tab =================
-  // Tracks which list entries currently have their notes area expanded.
-  // Intentionally not persisted — it's just a UI convenience.
-  const expandedItems = { threads: new Set(), characters: new Set() };
-  const notesSaveTimers = {};
-
-  function renderListItems(key){
-    const arr = state[key];
-    const ul = document.getElementById(key + "Items");
-    ul.innerHTML = "";
-    if (arr.length === 0){
-      const li = document.createElement("li");
-      li.className = "empty-log";
-      li.textContent = "Nothing added yet.";
-      ul.appendChild(li);
-      return;
-    }
-    arr.forEach((item, idx) => {
-      const li = document.createElement("li");
-      li.className = "item-block";
-
-      const header = document.createElement("div");
-      header.className = "item-header";
-
-      const span = document.createElement("span");
-      span.className = "item-text";
-      const dot = item.notes && item.notes.trim() ? "<span class=\"item-note-dot\">●</span>" : "";
-      span.innerHTML = `${dot}${idx+1}. ${item.text}`;
-
-      const btn = document.createElement("button");
-      btn.className = "item-remove";
-      btn.setAttribute("aria-label", "Remove");
-      btn.textContent = "×";
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        expandedItems[key].delete(idx);
-        state[key].splice(idx, 1);
-        saveState();
-        renderListItems(key);
-        updateListCount(key);
-      });
-
-      header.appendChild(span);
-      header.appendChild(btn);
-      header.addEventListener("click", () => {
-        if (expandedItems[key].has(idx)) expandedItems[key].delete(idx);
-        else expandedItems[key].add(idx);
-        renderListItems(key);
-      });
-
-      li.appendChild(header);
-
-      if (expandedItems[key].has(idx)){
-        const notesWrap = document.createElement("div");
-        notesWrap.className = "item-notes";
-        const textarea = document.createElement("textarea");
-        textarea.placeholder = "Notes…";
-        textarea.value = item.notes || "";
-        textarea.addEventListener("click", (e) => e.stopPropagation());
-        textarea.addEventListener("input", () => {
-          state[key][idx].notes = textarea.value;
-          clearTimeout(notesSaveTimers[key + idx]);
-          notesSaveTimers[key + idx] = setTimeout(saveState, 400);
-        });
-        notesWrap.appendChild(textarea);
-        li.appendChild(notesWrap);
-      }
-
-      ul.appendChild(li);
-    });
-  }
-
-  function updateListCount(key){
-    document.getElementById(key + "Count").textContent = `${state[key].length}/${MAX_LIST_SIZE}`;
-    document.getElementById(key + "AddBtn").disabled = state[key].length >= MAX_LIST_SIZE;
-  }
-
-  function addListItem(key){
-    const input = document.getElementById(key + "Input");
-    const val = input.value.trim();
-    if (!val || state[key].length >= MAX_LIST_SIZE) return;
-    state[key].push({ text: val, notes: "" });
-    input.value = "";
-    saveState();
-    renderListItems(key);
-    updateListCount(key);
-  }
-
-  function renderListLog(key){
-    const list = document.getElementById(key + "LogList");
-    list.innerHTML = "";
-    const entries = state[key + "Log"];
-    if (entries.length === 0){
-      const li = document.createElement("li");
-      li.className = "empty-log";
-      li.textContent = "No rolls yet.";
-      list.appendChild(li);
-      return;
-    }
-    entries.forEach(entry => {
-      const li = document.createElement("li");
-      li.className = "log-item";
-      li.innerHTML = `
-        <span class="log-main">slot ${entry.index}</span>
-        <span class="log-answer ${LIST_CONFIG[key].pickClass}">${entry.isChoose ? "Choose" : entry.text}</span>
-      `;
-      list.appendChild(li);
-    });
-  }
-
-  // Mirrors the Adventure Lists selection method: each list is 5 sections of 5
-  // lines. The die used to pick a section depends on how many sections are
-  // active (1–5 elements = section 1 only; 6–10 = d4; 11–15 = d6; 16–20 = d8;
-  // 21–25 = d10), then a d10 picks the line within that section. Landing on a
-  // line beyond what's currently filled is a "Choose" — an intentionally
-  // blank result.
-  function rollOnList(key){
-    const arr = state[key];
-    const N = arr.length;
-    const dieBox = document.getElementById(key + "RollDie");
-    const answerBox = document.getElementById(key + "AnswerText");
-    const resultBox = document.getElementById(key + "ResultBox");
-
-    if (N === 0){
-      dieBox.textContent = "List is empty";
-      answerBox.className = "answer " + LIST_CONFIG[key].pickClass;
-      answerBox.textContent = "Nothing to roll — add an entry first";
-      document.getElementById(key + "NotesText").textContent = "";
-      resultBox.classList.remove("show");
-      void resultBox.offsetWidth;
-      resultBox.classList.add("show");
-      return null;
-    }
-
-    const sectionsActive = Math.min(5, Math.ceil(N/5));
-    let sectionRoll = null, dieSize = null, section = 1;
-    if (sectionsActive > 1){
-      dieSize = sectionsActive * 2;
-      sectionRoll = 1 + Math.floor(Math.random()*dieSize);
-      section = Math.ceil(sectionRoll/2);
-    }
-    const lineRoll = 1 + Math.floor(Math.random()*10);
-    const line = Math.ceil(lineRoll/2);
-    const index = (section-1)*5 + line;
-    const isChoose = index > N;
-    const picked = isChoose ? null : arr[index-1];
-    const text = isChoose ? null : picked.text;
-    const notes = isChoose ? null : picked.notes;
-
-    const dieText = dieSize
-      ? `Section: rolled ${sectionRoll} on d${dieSize} → section ${section} · Line: rolled ${lineRoll} on d10 → line ${line}`
-      : `Line: rolled ${lineRoll} on d10 → line ${line}`;
-    dieBox.textContent = `${dieText} (slot ${index})`;
-    answerBox.className = "answer " + LIST_CONFIG[key].pickClass;
-    answerBox.textContent = isChoose ? "Choose — empty slot" : text;
-    document.getElementById(key + "NotesText").textContent = (!isChoose && notes && notes.trim()) ? notes : "";
-
-    resultBox.classList.remove("show");
-    void resultBox.offsetWidth;
-    resultBox.classList.add("show");
-
-    const logKey = key + "Log";
-    state[logKey].unshift({ index, isChoose, text });
-    if (state[logKey].length > MAX_LIST_LOG) state[logKey].length = MAX_LIST_LOG;
-    renderListLog(key);
-    saveState();
-    return { index, isChoose, text, notes };
-  }
-
-  // ================= Rendering & logic: NPC Creator tab =================
-  function renderRLevelRow(){
-    const container = document.getElementById("rLevelRow");
-    container.innerHTML = "";
-    document.getElementById("rLevelValue").textContent = state.rLevel;
-    for (let i=1; i<=5; i++){
-      const btn = document.createElement("button");
-      btn.className = "chaos-btn" + (i === state.rLevel ? " selected" : "");
-      btn.textContent = i;
-      btn.setAttribute("aria-pressed", i === state.rLevel ? "true" : "false");
-      if (i === state.rLevel){
-        btn.style.background = CHAOS_COLORS[i-1];
-        btn.style.borderColor = CHAOS_COLORS[i-1];
-      }
-      btn.addEventListener("click", () => {
-        state.rLevel = i;
-        saveState();
-        renderRLevelRow();
-      });
-      container.appendChild(btn);
-    }
-  }
-
-  function rollNpc(rLevel){
-    const modRoll = rollD100();
-    const nounRoll = rollD100();
-    const powerRoll = rollD100();
-    const powerLabel = evaluatePower(rLevel, powerRoll);
-
-    const usedColumns = new Set();
-    const motivations = [];
-    for (let i=0; i<3; i++){
-      const verbRoll = rollD100();
-      let nounR, col, guard = 0;
-      do {
-        nounR = rollD100();
-        col = motivationColumn(nounR);
-        guard++;
-      } while (usedColumns.has(col) && guard < 50);
-      usedColumns.add(col);
-      motivations.push({ verbRoll, verbWord: MOTIVATION_VERB[verbRoll-1], nounRoll: nounR, nounWord: MOTIVATION_NOUN[nounR-1] });
-    }
-
-    return {
-      modRoll, modWord: NPC_MODIFIER[modRoll-1],
-      nounRoll, nounWord: NPC_NOUN[nounRoll-1],
-      powerRoll, powerLabel, rLevel,
-      motivations
+  function subscribe(fn) {
+    listeners.push(fn);
+    fn(cache.slice());
+    return function () {
+      listeners = listeners.filter(function (l) { return l !== fn; });
     };
   }
 
-  function renderNpcLog(){
-    const list = document.getElementById("npcLogList");
-    list.innerHTML = "";
-    if (state.npcLog.length === 0){
-      const li = document.createElement("li");
-      li.className = "empty-log";
-      li.textContent = "No NPCs yet.";
-      list.appendChild(li);
-      return;
-    }
-    state.npcLog.forEach(entry => {
-      const li = document.createElement("li");
-      li.className = "log-item";
-      const motivText = entry.motivations.map(m => titleCase(m.verbWord + " " + m.nounWord)).join("; ");
-      li.innerHTML = `
-        <span>
-          <span class="log-main">${titleCase(entry.modWord + " " + entry.nounWord)}</span>
-          <span class="log-sub">${entry.powerLabel} · ${motivText}</span>
-        </span>
-      `;
-      list.appendChild(li);
-    });
-  }
-
-  function renderRelationshipPills(){
-    const container = document.getElementById("relationshipPills");
-    container.innerHTML = "";
-    RELATIONSHIPS.forEach(name => {
-      const btn = document.createElement("button");
-      btn.className = "pill" + (name === state.relationship ? " selected" : "");
-      btn.textContent = titleCase(name);
-      btn.setAttribute("aria-pressed", name === state.relationship ? "true" : "false");
-      btn.addEventListener("click", () => {
-        state.relationship = name;
-        saveState();
-        renderRelationshipPills();
-      });
-      container.appendChild(btn);
-    });
-  }
-
-  function renderMoodPills(){
-    const container = document.getElementById("moodPills");
-    container.innerHTML = "";
-    MOODS.forEach(name => {
-      const btn = document.createElement("button");
-      btn.className = "pill" + (name === state.mood ? " selected" : "");
-      btn.textContent = titleCase(name);
-      btn.setAttribute("aria-pressed", name === state.mood ? "true" : "false");
-      btn.addEventListener("click", () => {
-        state.mood = name;
-        saveState();
-        renderMoodPills();
-      });
-      container.appendChild(btn);
-    });
-  }
-
-  function renderResponseLog(){
-    const list = document.getElementById("responseLogList");
-    list.innerHTML = "";
-    if (state.responseLog.length === 0){
-      const li = document.createElement("li");
-      li.className = "empty-log";
-      li.textContent = "No rolls yet.";
-      list.appendChild(li);
-      return;
-    }
-    state.responseLog.forEach(entry => {
-      const li = document.createElement("li");
-      li.className = "log-item";
-      const answerClass = entry.result.includes("Affirmative") ? "yes" : "no";
-      li.innerHTML = `
-        <span>
-          <span class="log-main">${titleCase(entry.relationship)} · ${titleCase(entry.mood)}</span><br>
-          rolled ${entry.roll}
-        </span>
-        <span class="log-answer ${answerClass}">${entry.result}</span>
-      `;
-      list.appendChild(li);
-    });
-  }
-
-  function renderDemeanorPills(){
-    const container = document.getElementById("demeanorPills");
-    container.innerHTML = "";
-    DEMEANOR_NAMES.forEach(name => {
-      const btn = document.createElement("button");
-      btn.className = "pill" + (name === state.demeanor ? " selected" : "");
-      btn.textContent = name;
-      btn.setAttribute("aria-pressed", name === state.demeanor ? "true" : "false");
-      btn.addEventListener("click", () => {
-        state.demeanor = name;
-        saveState();
-        renderDemeanorPills();
-      });
-      container.appendChild(btn);
-    });
-  }
-
-  function rollDiscussion(selectedName){
-    let demeanorRoll = null;
-    let demeanor;
-    if (selectedName === "Random"){
-      demeanorRoll = rollD100();
-      demeanor = getDemeanorByRoll(demeanorRoll);
+  async function save(characterIn) {
+    // Defensive deep clone: documents delivered by onSnapshot are frozen,
+    // and callers should already clone before mutating — but save() must
+    // never assume that, since character.updatedAt below would silently
+    // no-op (or throw in strict mode) against a frozen object.
+    const character = JSON.parse(JSON.stringify(characterIn));
+    character.updatedAt = Date.now();
+    const idx = cache.findIndex(function (c) { return c.id === character.id; });
+    if (idx >= 0) cache[idx] = character; else cache.push(character);
+    notify();
+    if (backend === 'db' && col) {
+      await col.doc(character.id).set(character);
     } else {
-      demeanor = getDemeanorByName(selectedName);
+      localWrite(cache);
     }
-    const bearingRoll = 1 + Math.floor(Math.random()*10);
-    const bearingWord = demeanor.words[bearingRoll-1];
-    const focusRoll = rollD100();
-    const focusLabel = getFocus(focusRoll);
-    return { demeanorRoll, demeanorName: demeanor.name, bearingRoll, bearingWord, focusRoll, focusLabel };
   }
 
-  function renderDiscussionLog(){
-    const list = document.getElementById("discussionLogList");
-    list.innerHTML = "";
-    if (state.discussionLog.length === 0){
-      const li = document.createElement("li");
-      li.className = "empty-log";
-      li.textContent = "No rolls yet.";
-      list.appendChild(li);
-      return;
-    }
-    state.discussionLog.forEach(entry => {
-      const li = document.createElement("li");
-      li.className = "log-item";
-      li.innerHTML = `
-        <span class="log-main">${entry.demeanorName}</span>
-        <span class="log-answer meaning">${entry.bearingWord} → ${entry.focusLabel}</span>
-      `;
-      list.appendChild(li);
-    });
-  }
-
-  function renderAll(){
-    renderOddsPills();
-    renderChaosRow();
-    renderLog();
-    renderMeaningPills();
-    renderMeaningLog();
-    ["threads","characters"].forEach(key => {
-      renderListItems(key);
-      updateListCount(key);
-      renderListLog(key);
-    });
-    renderRLevelRow();
-    renderNpcLog();
-    renderRelationshipPills();
-    renderMoodPills();
-    renderResponseLog();
-    renderDemeanorPills();
-    renderDiscussionLog();
-  }
-
-  // ================= Roll handlers =================
-  document.getElementById("rollBtn").addEventListener("click", () => {
-    const roll = rollD100();
-    const { result, excYesMax, yesMax, excNoMin } = evaluateFate(state.odds, state.chaos, roll);
-    const isEvent = checkRandomEvent(roll, state.chaos);
-    let eventFocus = null;
-    let eventRoll = null;
-    if (isEvent){
-      eventRoll = rollD100();
-      eventFocus = getEventFocus(eventRoll);
-    }
-
-    const resultSection = document.getElementById("resultSection");
-    document.getElementById("rollValue").textContent = roll;
-    const answerEl = document.getElementById("answerText");
-    answerEl.textContent = result;
-    answerEl.className = "answer " + (result.includes("Yes") ? "yes" : "no");
-    document.getElementById("thresholdText").textContent =
-      `Exceptional Yes ≤ ${fmt(excYesMax)} · Yes ≤ ${fmt(yesMax)} · Exceptional No ≥ ${fmt(excNoMin)}`;
-
-    const eventBox = document.getElementById("eventBox");
-    const eventTitle = document.getElementById("eventTitle");
-    const eventDetail = document.getElementById("eventDetail");
-    const jumpBtn = document.getElementById("eventJumpBtn");
-    jumpBtn.hidden = true;
-    jumpBtn.onclick = null;
-
-    if (isEvent){
-      eventBox.className = "event-box hit";
-      eventTitle.textContent = "⟡ Random Event";
-      eventDetail.textContent = `Focus: ${eventFocus} (rolled ${eventRoll} on the Event Focus Table)`;
-
-      let jumpKey = null;
-      if (NPC_FOCI.has(eventFocus)) jumpKey = "characters";
-      else if (THREAD_FOCI.has(eventFocus)) jumpKey = "threads";
-
-      if (jumpKey){
-        jumpBtn.hidden = false;
-        jumpBtn.textContent = jumpKey === "characters" ? "Roll a Character →" : "Roll a Thread →";
-        jumpBtn.onclick = () => {
-          switchTab("lists");
-          saveState();
-          rollOnList(jumpKey);
-          requestAnimationFrame(() => {
-            document.getElementById(jumpKey + "ResultBox").scrollIntoView({ behavior: "smooth", block: "center" });
-          });
-        };
-      }
+  async function remove(id) {
+    cache = cache.filter(function (c) { return c.id !== id; });
+    notify();
+    if (backend === 'db' && col) {
+      await col.doc(id).delete();
     } else {
-      eventBox.className = "event-box none";
-      eventTitle.textContent = "No Random Event";
-      eventDetail.textContent = `Roll ${roll} isn't a qualifying double for Chaos Factor ${state.chaos}.`;
+      localWrite(cache);
     }
-
-    resultSection.classList.remove("show");
-    void resultSection.offsetWidth;
-    resultSection.classList.add("show");
-
-    state.history.unshift({
-      roll, odds: state.odds, chaos: state.chaos, result,
-      event: isEvent ? eventFocus : null
-    });
-    if (state.history.length > MAX_LOG) state.history.length = MAX_LOG;
-    renderLog();
-    saveState();
-  });
-
-  document.getElementById("clearBtn").addEventListener("click", () => {
-    state.history = [];
-    renderLog();
-    saveState();
-  });
-
-  document.getElementById("meaningRollBtn").addEventListener("click", () => {
-    const { r1, r2, w1, w2 } = rollMeaning(state.meaningTable);
-
-    const resultSection = document.getElementById("meaningResultSection");
-    document.getElementById("meaningRollValues").textContent = `${r1}, ${r2}`;
-    document.getElementById("meaningAnswerText").textContent = `${w1} + ${w2}`;
-    document.getElementById("meaningSubText").textContent = `${state.meaningTable} Meaning Table`;
-
-    resultSection.classList.remove("show");
-    void resultSection.offsetWidth;
-    resultSection.classList.add("show");
-
-    state.meaningHistory.unshift({ table: state.meaningTable, r1, r2, w1, w2 });
-    if (state.meaningHistory.length > MAX_LOG) state.meaningHistory.length = MAX_LOG;
-    renderMeaningLog();
-    saveState();
-  });
-
-  document.getElementById("meaningClearBtn").addEventListener("click", () => {
-    state.meaningHistory = [];
-    renderMeaningLog();
-    saveState();
-  });
-
-  ["threads","characters"].forEach(key => {
-    document.getElementById(key + "AddBtn").addEventListener("click", () => addListItem(key));
-    document.getElementById(key + "Input").addEventListener("keydown", (e) => {
-      if (e.key === "Enter"){ e.preventDefault(); addListItem(key); }
-    });
-    document.getElementById(key + "RollBtn").addEventListener("click", () => rollOnList(key));
-  });
-
-  let lastNpcResult = null;
-
-  document.getElementById("npcCreateBtn").addEventListener("click", () => {
-    const npc = rollNpc(state.rLevel);
-    lastNpcResult = npc;
-
-    const resultSection = document.getElementById("npcResultBox");
-    document.getElementById("npcRollDie").textContent =
-      `Modifier ${npc.modRoll} · Noun ${npc.nounRoll} · Power ${npc.powerRoll} (R-level ${npc.rLevel})`;
-    document.getElementById("npcTitleText").textContent = titleCase(npc.modWord + " " + npc.nounWord);
-    document.getElementById("npcPowerText").textContent = `${npc.powerLabel}, relative to the PCs`;
-    document.getElementById("npcMotivationsText").innerHTML = npc.motivations
-      .map(m => `${titleCase(m.verbWord + " " + m.nounWord)} <span class="log-sub" style="display:inline;">(${m.verbRoll}, ${m.nounRoll})</span>`)
-      .join("<br>");
-    document.getElementById("npcAddFeedback").textContent = "";
-
-    resultSection.classList.remove("show");
-    void resultSection.offsetWidth;
-    resultSection.classList.add("show");
-
-    state.npcLog.unshift(npc);
-    if (state.npcLog.length > MAX_LIST_LOG) state.npcLog.length = MAX_LIST_LOG;
-    renderNpcLog();
-    saveState();
-  });
-
-  function npcToCharacterEntry(npc){
-    const title = titleCase(npc.modWord + " " + npc.nounWord);
-    const motivText = npc.motivations.map(m => titleCase(m.verbWord + " " + m.nounWord)).join("; ");
-    const notes = `${npc.powerLabel} power, relative to the PCs.\nMotivations: ${motivText}.`;
-    return { text: title, notes };
   }
 
-  document.getElementById("npcAddToCharsBtn").addEventListener("click", () => {
-    const feedback = document.getElementById("npcAddFeedback");
-    if (!lastNpcResult) return;
-    if (state.characters.length >= MAX_LIST_SIZE){
-      feedback.textContent = `Characters list is full (${MAX_LIST_SIZE}/${MAX_LIST_SIZE}) — remove one to add another.`;
-      return;
-    }
-    state.characters.push(npcToCharacterEntry(lastNpcResult));
-    saveState();
-    renderListItems("characters");
-    updateListCount("characters");
-    feedback.textContent = "Added to Characters list ✓";
-  });
+  function backendName() { return backend; }
 
-  document.getElementById("npcClearBtn").addEventListener("click", () => {
-    state.npcLog = [];
-    renderNpcLog();
-    saveState();
-  });
-
-  document.getElementById("responseRollBtn").addEventListener("click", () => {
-    const roll = rollD100();
-    const result = evaluateResponse(state.relationship, state.mood, roll);
-    const moodIdx = MOODS.indexOf(state.mood);
-    const [veryAff, aff, neg] = RESPONSE_CHART[state.relationship][moodIdx];
-
-    const resultSection = document.getElementById("responseResultBox");
-    document.getElementById("responseRollValue").textContent = roll;
-    const answerEl = document.getElementById("responseAnswerText");
-    answerEl.textContent = result;
-    answerEl.className = "answer " + (result.includes("Affirmative") ? "yes" : "no");
-    document.getElementById("responseThresholdText").textContent =
-      `Very Affirmative ≤ ${veryAff} · Affirmative ≤ ${aff} · Negative ≤ ${neg} · Very Negative > ${neg}`;
-
-    resultSection.classList.remove("show");
-    void resultSection.offsetWidth;
-    resultSection.classList.add("show");
-
-    state.responseLog.unshift({ roll, relationship: state.relationship, mood: state.mood, result });
-    if (state.responseLog.length > MAX_LIST_LOG) state.responseLog.length = MAX_LIST_LOG;
-    renderResponseLog();
-    saveState();
-  });
-
-  document.getElementById("responseClearBtn").addEventListener("click", () => {
-    state.responseLog = [];
-    renderResponseLog();
-    saveState();
-  });
-
-  document.getElementById("discussionRollBtn").addEventListener("click", () => {
-    const d = rollDiscussion(state.demeanor);
-
-    const resultSection = document.getElementById("discussionResultBox");
-    document.getElementById("discussionRollDie").textContent = d.demeanorRoll !== null
-      ? `Demeanor ${d.demeanorRoll} → ${d.demeanorName} · Bearing ${d.bearingRoll} · Focus ${d.focusRoll}`
-      : `Demeanor: ${d.demeanorName} (chosen) · Bearing ${d.bearingRoll} · Focus ${d.focusRoll}`;
-    document.getElementById("discussionAnswerText").textContent =
-      `The ${d.demeanorName.toLowerCase()} NPC speaks of ${d.bearingWord} regarding ${d.focusLabel}.`;
-
-    resultSection.classList.remove("show");
-    void resultSection.offsetWidth;
-    resultSection.classList.add("show");
-
-    state.discussionLog.unshift(d);
-    if (state.discussionLog.length > MAX_LIST_LOG) state.discussionLog.length = MAX_LIST_LOG;
-    renderDiscussionLog();
-    saveState();
-  });
-
-  document.getElementById("discussionClearBtn").addEventListener("click", () => {
-    state.discussionLog = [];
-    renderDiscussionLog();
-    saveState();
-  });
-
-  loadState();
+  return { init: init, subscribe: subscribe, save: save, remove: remove, backendName: backendName };
 })();
+
+/* ---------------- Utilities ---------------- */
+
+function uid() {
+  return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function escapeHtml(str) {
+  return String(str == null ? '' : str).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+
+/* Remaining pool values for a slot-assignment (axisValues), given the
+   base pool and which key we're computing options for. */
+function remainingPoolFor(pool, assignedMap, forKey) {
+  const counts = {};
+  pool.forEach(function (v) { counts[v] = (counts[v] || 0) + 1; });
+  Object.keys(assignedMap).forEach(function (k) {
+    const v = assignedMap[k];
+    if (k !== forKey && v !== null && v !== undefined && counts[v] !== undefined) {
+      counts[v] -= 1;
+    }
+  });
+  const options = [];
+  const currentVal = assignedMap[forKey];
+  const distinct = pool.filter(function (v, i) { return pool.indexOf(v) === i; }).sort(function (a, b) { return b - a; });
+  distinct.forEach(function (v) {
+    const remaining = counts[v] || 0;
+    if (remaining > 0 || v === currentVal) options.push(v);
+  });
+  return options;
+}
+
+function poolFullyAssigned(pool, assignedMap, keys) {
+  return keys.every(function (k) { return assignedMap[k] !== null && assignedMap[k] !== undefined; });
+}
+
+function poolRemainingSummary(pool, assignedMap, keys) {
+  const counts = {};
+  pool.forEach(function (v) { counts[v] = (counts[v] || 0) + 1; });
+  keys.forEach(function (k) {
+    const v = assignedMap[k];
+    if (v !== null && v !== undefined && counts[v] !== undefined) counts[v] -= 1;
+  });
+  const left = [];
+  Object.keys(counts).sort(function (a, b) { return b - a; }).forEach(function (v) {
+    for (let i = 0; i < counts[v]; i++) left.push(v);
+  });
+  return left.length ? 'Still to place: ' + left.join(', ') : 'All ratings placed.';
+}
+
+/* Cycles a stat's staged Karma boost 0 -> 1 -> 2 -> 0. If advancing would
+   push the total staged across all stats past the per-roll cap, snaps
+   back to 0 instead of advancing. */
+function cycleKarmaBoost(pb, character, axisKey) {
+  const cap = pb.karma.maxPerRoll;
+  const current = character.karmaBoost[axisKey] || 0;
+  const next = (current + 1) % 3;
+  if (next !== 0) {
+    const otherTotal = pb.axisOrder.reduce(function (sum, k) {
+      return sum + (k === axisKey ? 0 : (character.karmaBoost[k] || 0));
+    }, 0);
+    if (otherTotal + next > cap) {
+      character.karmaBoost[axisKey] = 0;
+      return;
+    }
+  }
+  character.karmaBoost[axisKey] = next;
+}
+
+function effectiveStat(c, pb, key) {
+  const base = c.axisValues[key];
+  const boost = (c.karmaBoost && c.karmaBoost[key]) || 0;
+  const deb = pb.debilities.filter(function (d) { return d.stat === key; })[0] || null;
+  const penalty = (deb && c.debilities[deb.key]) ? 1 : 0;
+  return { base: base, boost: boost, penalty: penalty, total: base + boost - penalty, debility: deb };
+}
+
+/* Fills in defaults for any fields a legacy/partial save might be missing,
+   so older saved characters don't crash the newer UI. */
+function normalizeCharacter(c) {
+  const pb = PLAYBOOKS[c.playbookId];
+  if (typeof c.karma !== 'number') c.karma = 0;
+  if (!c.karmaBoost) c.karmaBoost = {};
+  if (!c.axisValues) c.axisValues = {};
+  if (!c.debilities) c.debilities = {};
+  pb.axisOrder.forEach(function (k) {
+    if (typeof c.karmaBoost[k] !== 'number') c.karmaBoost[k] = 0;
+    if (typeof c.axisValues[k] !== 'number') c.axisValues[k] = 0;
+  });
+  pb.debilities.forEach(function (d) {
+    if (typeof c.debilities[d.key] !== 'boolean') c.debilities[d.key] = false;
+  });
+  if (typeof c.harm !== 'number') c.harm = 0;
+  if (typeof c.strain !== 'number') c.strain = 0;
+  if (!c.skills) c.skills = { expert: null, trained: [] };
+  if (!c.notes) c.notes = '';
+}
+
+/* ---------------- App state ---------------- */
+
+const state = {
+  view: 'home', // 'home' | 'chooseThread' | 'wizard' | 'sheet'
+  characters: [],
+  activeId: null,
+  wizardStep: 0,
+  wizardEditingId: null,
+  draft: null,
+  toast: null,
+  confirmDelete: false
+};
+
+function newDraft(playbookId) {
+  const pb = PLAYBOOKS[playbookId];
+  const axisValues = {};
+  pb.axisOrder.forEach(function (k) { axisValues[k] = null; });
+  const karmaBoost = {};
+  pb.axisOrder.forEach(function (k) { karmaBoost[k] = 0; });
+  const debilities = {};
+  pb.debilities.forEach(function (d) { debilities[d.key] = false; });
+  return {
+    id: uid(),
+    playbookId: playbookId,
+    name: '',
+    aspiration: null,   // text string once chosen
+    formative: null,    // key string once chosen (resolved to an object at save time)
+    axisValues: axisValues,
+    skills: { expert: null, trained: [] },
+    ability: null,      // key string once chosen (resolved to an object at save time)
+    harm: 0,
+    strain: 0,
+    debilities: debilities,
+    karma: 0,
+    karmaBoost: karmaBoost,
+    notes: ''
+  };
+}
+
+/* Turns a saved character back into wizard-editable draft shape:
+   formative/ability go from resolved objects back to plain keys. */
+function draftFromCharacter(c) {
+  const d = JSON.parse(JSON.stringify(c));
+  if (d.formative && typeof d.formative === 'object') d.formative = d.formative.key;
+  if (d.ability && typeof d.ability === 'object') d.ability = d.ability.key;
+  return d;
+}
+
+/* Turns a wizard draft into a storable character: formative/ability keys
+   get resolved (and snapshotted) into full objects so the character stays
+   self-describing even if the source tables change later. */
+function finalizeCharacter(draft, pb) {
+  const c = JSON.parse(JSON.stringify(draft));
+  const formativeObj = pb.formativeExperiences.filter(function (f) { return f.key === draft.formative; })[0];
+  c.formative = formativeObj
+    ? { key: formativeObj.key, label: formativeObj.label, desc: formativeObj.desc, polarity: formativeObj.polarity }
+    : draft.formative;
+  const abilityObj = pb.abilities.filter(function (a) { return a.key === draft.ability; })[0];
+  c.ability = abilityObj
+    ? { key: abilityObj.key, name: abilityObj.name, body: abilityObj.body, bonus: abilityObj.bonus }
+    : draft.ability;
+  return c;
+}
+
+/* ---------------- Rendering root ---------------- */
+
+const root = document.getElementById('app');
+
+function render() {
+  if (state.view === 'home') root.innerHTML = renderHome();
+  else if (state.view === 'chooseThread') root.innerHTML = renderChooseThread();
+  else if (state.view === 'wizard') root.innerHTML = renderWizard();
+  else if (state.view === 'sheet') root.innerHTML = renderSheet();
+  renderToast();
+}
+
+function renderToast() {
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast';
+    el.className = 'toast';
+    document.body.appendChild(el);
+  }
+  if (state.toast) {
+    el.textContent = state.toast;
+    el.classList.add('toast-visible');
+    clearTimeout(el._t);
+    el._t = setTimeout(function () {
+      el.classList.remove('toast-visible');
+    }, 1600);
+  }
+}
+
+function showToast(msg) {
+  state.toast = msg;
+  renderToast();
+}
+
+/* ---------------- Home view ---------------- */
+
+function renderHome() {
+  const chars = state.characters;
+  const backendNote = Store.backendName() === 'db'
+    ? 'Threads saved to your account.'
+    : 'Threads saved in this browser.';
+
+  let list;
+  if (!chars.length) {
+    list = '' +
+      '<div class="empty-loom">' +
+      '  <p class="empty-loom-title">The loom is bare.</p>' +
+      '  <p class="empty-loom-body">Weave your first Thread to begin.</p>' +
+      '</div>';
+  } else {
+    list = '<div class="char-grid">' + chars.map(renderCharCard).join('') + '</div>';
+  }
+
+  return '' +
+    '<header class="home-header">' +
+    '  <p class="kicker">Weaveborn</p>' +
+    '  <h1>The Loom</h1>' +
+    '  <p class="home-sub">Your woven Threads, ready to pick back up.</p>' +
+    '</header>' +
+    list +
+    '<button class="btn btn-primary btn-new" data-action="new-character">Weave a new Thread</button>' +
+    '<p class="storage-note">' + backendNote + '</p>';
+}
+
+/* ---------------- Choose Thread view ---------------- */
+
+function renderChooseThread() {
+  const cards = PLAYBOOK_LIST.map(function (id) {
+    const pb = PLAYBOOKS[id];
+    return '' +
+      '<button class="thread-pick-card" data-action="choose-thread" data-playbook="' + id + '">' +
+      '  <span class="thread-pick-name">' + escapeHtml(pb.name) + '</span>' +
+      '  <span class="thread-pick-sub">Weave a ' + escapeHtml(pb.name) + ' Thread</span>' +
+      '</button>';
+  }).join('');
+
+  return '' +
+    '<header class="home-header">' +
+    '  <p class="kicker">Weaveborn</p>' +
+    '  <h1>Choose your Thread</h1>' +
+    '  <p class="home-sub">Which power will you weave?</p>' +
+    '</header>' +
+    '<div class="thread-pick-grid">' + cards + '</div>' +
+    '<button class="btn btn-ghost btn-new" data-action="go-home">Cancel</button>';
+}
+
+function renderCharCard(c) {
+  const pb = PLAYBOOKS[c.playbookId];
+  const harmBad = c.harm >= pb.harm.badAt;
+  const strainBad = c.strain >= pb.strain.badAt;
+  return '' +
+    '<button class="char-card" data-action="open-character" data-id="' + c.id + '">' +
+    '  <span class="char-card-thread">' + escapeHtml(pb.name) + '</span>' +
+    '  <span class="char-card-name">' + escapeHtml(c.name || 'Unnamed') + '</span>' +
+    '  <span class="char-card-status">' +
+    '    <span class="' + (harmBad ? 'pip-bad' : '') + '">Harm ' + c.harm + '/' + pb.harm.max + '</span>' +
+    '    <span class="' + (strainBad ? 'pip-bad' : '') + '">Strain ' + c.strain + '/' + pb.strain.max + '</span>' +
+    '  </span>' +
+    '</button>';
+}
+
+/* ---------------- Wizard view ---------------- */
+
+const WIZARD_STEPS = ['Identity', 'Threadcraft', 'Training', 'Ability', 'Review'];
+
+function renderWizard() {
+  const d = state.draft;
+  const pb = PLAYBOOKS[d.playbookId];
+  const stepIdx = state.wizardStep;
+
+  const stepsNav = WIZARD_STEPS.map(function (label, i) {
+    const cls = ['step-tab'];
+    if (i === stepIdx) cls.push('step-tab-active');
+    if (i < stepIdx) cls.push('step-tab-done');
+    return '<div class="' + cls.join(' ') + '">' + (i + 1) + '. ' + label + '</div>';
+  }).join('');
+
+  let body;
+  if (stepIdx === 0) body = stepIdentity(d, pb);
+  else if (stepIdx === 1) body = stepThreadcraft(d, pb);
+  else if (stepIdx === 2) body = stepTraining(d, pb);
+  else if (stepIdx === 3) body = stepAbility(d, pb);
+  else body = stepReview(d, pb);
+
+  const canBack = stepIdx > 0;
+  const isLast = stepIdx === WIZARD_STEPS.length - 1;
+  const canAdvance = stepValid(stepIdx, d, pb);
+
+  return '' +
+    '<div class="wizard">' +
+    '  <div class="step-nav">' + stepsNav + '</div>' +
+    '  <div class="wizard-body">' + body + '</div>' +
+    '  <div class="wizard-footer">' +
+    '    <button class="btn btn-ghost" data-action="wizard-cancel">Cancel</button>' +
+    '    <div class="wizard-footer-right">' +
+    (canBack ? '<button class="btn btn-ghost" data-action="wizard-back">Back</button>' : '') +
+    (isLast
+      ? '<button class="btn btn-primary" data-action="wizard-save">Save Thread</button>'
+      : '<button class="btn btn-primary" data-action="wizard-next" ' + (canAdvance ? '' : 'disabled') + '>Next</button>') +
+    '    </div>' +
+    '  </div>' +
+    '</div>';
+}
+
+function stepValid(stepIdx, d, pb) {
+  if (stepIdx === 0) return !!(d.name.trim() && d.aspiration !== null && d.formative !== null);
+  if (stepIdx === 1) return poolFullyAssigned(pb.axisPool, d.axisValues, pb.axisOrder);
+  if (stepIdx === 2) return d.skills.expert !== null && d.skills.trained.length === 3;
+  if (stepIdx === 3) return d.ability !== null;
+  return true;
+}
+
+function radioRow(group, value, checked, labelHtml) {
+  return '' +
+    '<label class="radio-row' + (checked ? ' radio-row-checked' : '') + '">' +
+    '  <input type="radio" name="' + group + '" value="' + value + '" ' + (checked ? 'checked' : '') + ' data-action="pick-' + group + '" />' +
+    '  <span>' + labelHtml + '</span>' +
+    '</label>';
+}
+
+function stepIdentity(d, pb) {
+  const aspirationRows = pb.aspirations.map(function (a, i) {
+    return radioRow('aspiration', i, d.aspiration === a, escapeHtml(a));
+  }).join('');
+
+  const inspirations = pb.formativeExperiences.filter(function (f) { return f.polarity === 'inspiration'; });
+  const burdens = pb.formativeExperiences.filter(function (f) { return f.polarity === 'burden'; });
+
+  function formativeRow(f) {
+    return '' +
+      '<label class="radio-row formative-row' + (d.formative === f.key ? ' radio-row-checked' : '') + '">' +
+      '  <input type="radio" name="formative" value="' + f.key + '" ' + (d.formative === f.key ? 'checked' : '') + ' data-action="pick-formative" />' +
+      '  <span class="formative-text"><strong>' + escapeHtml(f.label) + '</strong> — ' + escapeHtml(f.desc) + '</span>' +
+      '</label>';
+  }
+
+  return '' +
+    '<section class="wiz-section">' +
+    '  <h2>Who are you?</h2>' +
+    '  <label class="field-label" for="name-input">Name</label>' +
+    '  <div class="name-row">' +
+    '    <input id="name-input" class="text-input" type="text" maxlength="40" value="' + escapeHtml(d.name) + '" placeholder="Your character\'s name" data-field="name" />' +
+    '    <button class="btn btn-ghost btn-pun" data-action="pun-name" type="button">Puntastic name</button>' +
+    '  </div>' +
+    '</section>' +
+    '<section class="wiz-section">' +
+    '  <div class="section-head-row"><h2>Aspiration</h2><button class="btn btn-ghost btn-random" data-action="random-aspiration" type="button">🎲 Random</button></div>' +
+    '  <p class="wiz-hint">What drives you? Pick one.</p>' +
+    '  <div class="radio-list" data-group="aspiration">' + aspirationRows + '</div>' +
+    '</section>' +
+    '<section class="wiz-section">' +
+    '  <div class="section-head-row"><h2>Formative Experience</h2><button class="btn btn-ghost btn-random" data-action="random-formative" type="button">🎲 Random</button></div>' +
+    '  <p class="wiz-hint">What shaped you before your Thread awoke? Pick one.</p>' +
+    '  <h3 class="formative-subhead">Inspirations</h3>' +
+    '  <div class="radio-list">' + inspirations.map(formativeRow).join('') + '</div>' +
+    '  <h3 class="formative-subhead formative-subhead-burden">Burdens</h3>' +
+    '  <div class="radio-list">' + burdens.map(formativeRow).join('') + '</div>' +
+    '</section>';
+}
+
+function axisLevelText(axis, value) {
+  if (value === null || value === undefined) return null;
+  if (!axis.levels || axis.levels[value] === undefined) return null;
+  return axis.levels[value];
+}
+
+function poolSelect(name, options, current) {
+  let opts = '<option value="">—</option>';
+  const all = options.slice();
+  if (current !== null && current !== undefined && all.indexOf(current) === -1) all.push(current);
+  all.sort(function (a, b) { return b - a; });
+  all.forEach(function (v) {
+    opts += '<option value="' + v + '" ' + (current === v ? 'selected' : '') + '>' + v + '</option>';
+  });
+  return '<select class="pool-select" data-pool-field="' + name + '">' + opts + '</select>';
+}
+
+function stepThreadcraft(d, pb) {
+  const axisRows = pb.axisOrder.map(function (key) {
+    const axis = pb.axes[key];
+    const options = remainingPoolFor(pb.axisPool, d.axisValues, key);
+    const current = d.axisValues[key];
+    const selectHtml = poolSelect('axis-' + key, options, current);
+    const levelText = axisLevelText(axis, current);
+    return '' +
+      '<div class="axis-row">' +
+      '  <div class="axis-row-head">' +
+      '    <span class="axis-label">' + escapeHtml(axis.label) + '</span>' +
+      selectHtml +
+      '  </div>' +
+      '  <p class="axis-hint">' + escapeHtml(axis.hint) + '</p>' +
+      '  <p class="axis-current-text">' + (levelText ? escapeHtml(levelText) : 'Choose a rating to see what it allows.') + '</p>' +
+      '</div>';
+  }).join('');
+
+  const axisPoolLeft = poolRemainingSummary(pb.axisPool, d.axisValues, pb.axisOrder);
+
+  return '' +
+    '<section class="wiz-section">' +
+    '  <h2>Threadcraft</h2>' +
+    '  <p class="wiz-hint">Assign <strong>' + pb.axisPool.join(', ') + '</strong> across your five ratings — one value each.</p>' +
+    '  <p class="pool-status">' + axisPoolLeft + '</p>' +
+    axisRows +
+    '</section>';
+}
+
+function stepTraining(d, pb) {
+  const rows = pb.skills.map(function (skill) {
+    const isExpert = d.skills.expert === skill;
+    const isTrained = d.skills.trained.indexOf(skill) !== -1;
+    const trainedDisabled = !isTrained && !isExpert && d.skills.trained.length >= 3;
+    return '' +
+      '<div class="skill-row">' +
+      '  <span class="skill-name">' + escapeHtml(skill) + '</span>' +
+      '  <label class="skill-toggle">' +
+      '    <input type="radio" name="expert-skill" data-action="pick-expert" value="' + escapeHtml(skill) + '" ' + (isExpert ? 'checked' : '') + ' />' +
+      '    Expert (+2)' +
+      '  </label>' +
+      '  <label class="skill-toggle' + (trainedDisabled ? ' skill-toggle-disabled' : '') + '">' +
+      '    <input type="checkbox" data-action="pick-trained" value="' + escapeHtml(skill) + '" ' + (isTrained ? 'checked' : '') + ' ' + (isExpert || trainedDisabled ? 'disabled' : '') + ' />' +
+      '    Trained (+1)' +
+      '  </label>' +
+      '</div>';
+  }).join('');
+
+  return '' +
+    '<section class="wiz-section">' +
+    '  <h2>Training</h2>' +
+    '  <p class="wiz-hint">Pick 1 Expert (+2) and 3 Trained (+1). Everything else stays Untrained (-1).</p>' +
+    '  <p class="pool-status">Expert: ' + (d.skills.expert ? escapeHtml(d.skills.expert) : '—') + ' &nbsp;·&nbsp; Trained: ' + d.skills.trained.length + '/3</p>' +
+    '  <div class="skill-list">' + rows + '</div>' +
+    '</section>';
+}
+
+function stepAbility(d, pb) {
+  const rows = pb.abilities.map(function (a) {
+    const checked = d.ability === a.key;
+    return '' +
+      '<label class="ability-row' + (checked ? ' ability-row-checked' : '') + '">' +
+      '  <input type="radio" name="ability" value="' + a.key + '" ' + (checked ? 'checked' : '') + ' data-action="pick-ability" />' +
+      '  <span class="ability-name">' + escapeHtml(a.name) + '</span>' +
+      '  <span class="ability-body">' + escapeHtml(a.body) + '</span>' +
+      '  <span class="ability-bonus">' + escapeHtml(a.bonus) + '</span>' +
+      '</label>';
+  }).join('');
+
+  return '' +
+    '<section class="wiz-section">' +
+    '  <h2>Starting Ability</h2>' +
+    '  <p class="wiz-hint">Pick one.</p>' +
+    '  <div class="ability-list">' + rows + '</div>' +
+    '</section>';
+}
+
+function stepReview(d, pb) {
+  const formative = pb.formativeExperiences.filter(function (f) { return f.key === d.formative; })[0];
+  const ability = pb.abilities.filter(function (a) { return a.key === d.ability; })[0];
+  const axisSummary = pb.axisOrder.map(function (k) {
+    return '<span class="review-chip">' + pb.axes[k].label + ' ' + d.axisValues[k] + '</span>';
+  }).join('');
+
+  return '' +
+    '<section class="wiz-section">' +
+    '  <h2>Review your Thread</h2>' +
+    '  <p class="review-name">' + escapeHtml(d.name) + '</p>' +
+    '  <p class="review-line">' + escapeHtml(d.aspiration) + '</p>' +
+    '  <p class="review-line">' + escapeHtml(formative.label) + ' <span class="pair-slash">·</span> ' + escapeHtml(formative.desc) + '</p>' +
+    '  <div class="review-chips">' + axisSummary + '</div>' +
+    '  <p class="review-line">Expert: ' + escapeHtml(d.skills.expert) + ' &nbsp;·&nbsp; Trained: ' + d.skills.trained.map(escapeHtml).join(', ') + '</p>' +
+    '  <p class="review-line">' + (ability ? escapeHtml(ability.name) : '') + '</p>' +
+    '</section>';
+}
+
+/* ---------------- Sheet view ---------------- */
+
+function renderTrackRow(kind, pb, c) {
+  const cfg = pb[kind];
+  const bad = c[kind] >= cfg.badAt;
+  const label = kind === 'harm' ? 'Harm' : 'Strain';
+  return '' +
+    '<div class="track-row">' +
+    '  <span class="track-label-wrap">' +
+    '    <span class="track-label' + (bad ? ' track-label-bad' : '') + '">' + label + '</span>' +
+    (bad ? ('<span class="track-status-badge">' + escapeHtml(cfg.badLabel) + '</span>') : '') +
+    '  </span>' +
+    '  <button class="stepper-btn" data-action="track-dec" data-kind="' + kind + '" ' + (c[kind] <= 0 ? 'disabled' : '') + ' aria-label="Remove ' + label + '">−</button>' +
+    renderPipTrack(kind, cfg.max, c[kind], cfg.badAt) +
+    '  <button class="stepper-btn" data-action="track-inc" data-kind="' + kind + '" ' + (c[kind] >= cfg.max ? 'disabled' : '') + ' aria-label="Add ' + label + '">+</button>' +
+    '  <span class="track-count">' + c[kind] + '/' + cfg.max + '</span>' +
+    '</div>';
+}
+
+function renderPipTrack(kind, max, value, badAt) {
+  let pips = '';
+  for (let i = 0; i < max; i++) {
+    const filled = i < value;
+    const marksBad = i === badAt - 1;
+    pips += '<button class="pip' + (filled ? ' pip-filled' : '') + (marksBad ? ' pip-threshold' : '') + '" data-action="set-' + kind + '" data-index="' + i + '" aria-label="' + kind + ' ' + (i + 1) + '"></button>';
+  }
+  return '<div class="pip-track">' + pips + '</div>';
+}
+
+function renderKarmaSection(c, pb) {
+  const staged = pb.axisOrder.reduce(function (sum, k) { return sum + ((c.karmaBoost && c.karmaBoost[k]) || 0); }, 0);
+  const canRoll = c.karma >= staged;
+  return '' +
+    '<div class="karma-row">' +
+    '  <span class="karma-label">Karma</span>' +
+    '  <button class="stepper-btn" data-action="karma-dec" ' + (c.karma <= 0 ? 'disabled' : '') + ' aria-label="Remove Karma">−</button>' +
+    '  <span class="karma-value">' + c.karma + '</span>' +
+    '  <button class="stepper-btn" data-action="karma-inc" aria-label="Add Karma">+</button>' +
+    '</div>' +
+    '<p class="karma-hint">Tap a stat below to stage a Karma boost' +
+    (staged > 0 ? (' <span class="karma-staged-tag">— ' + staged + '/' + pb.karma.maxPerRoll + ' staged</span>') : '') +
+    '</p>' +
+    '<button class="btn btn-primary btn-roll" data-action="roll" ' + (canRoll ? '' : 'disabled') + '>' +
+    (staged > 0 ? 'Roll — spend ' + staged + ' Karma' : 'Roll') +
+    '</button>';
+}
+
+function renderStatCard(c, pb, key) {
+  const axis = pb.axes[key];
+  const eff = effectiveStat(c, pb, key);
+  const deb = eff.debility;
+  const debActive = deb ? !!c.debilities[deb.key] : false;
+  const levelText = axisLevelText(axis, eff.total);
+  const modified = eff.total !== eff.base;
+  return '' +
+    '<div class="stat-card" data-action="cycle-karma-boost" data-key="' + key + '" role="button" tabindex="0" aria-label="' + escapeHtml(axis.label) + ', tap to stage a Karma boost">' +
+    '  <div class="stat-card-top">' +
+    '    <span class="stat-card-title">' +
+    '      <span class="stat-card-label">' + escapeHtml(axis.label) + '</span>' +
+    (deb ? ('<button class="debility-pill' + (debActive ? ' debility-pill-active' : '') + '" data-action="toggle-debility" data-key="' + deb.key + '" title="' + escapeHtml(deb.blurb) + '">' + escapeHtml(deb.label) + ' −1</button>') : '') +
+    '    </span>' +
+    '    <span class="stat-card-total-wrap">' +
+    (eff.boost > 0 ? ('<span class="stat-card-boost-tag">+' + eff.boost + '</span>') : '') +
+    '      <span class="stat-card-total' + (modified ? ' stat-card-total-modified' : '') + '">' + eff.total + '</span>' +
+    '    </span>' +
+    '  </div>' +
+    '  <p class="stat-card-desc">' + (levelText ? escapeHtml(levelText) : '') + '</p>' +
+    '</div>';
+}
+
+function renderSheet() {
+  const c = state.characters.filter(function (ch) { return ch.id === state.activeId; })[0];
+  if (!c) { state.view = 'home'; return renderHome(); }
+  normalizeCharacter(c);
+  const pb = PLAYBOOKS[c.playbookId];
+
+  const formative = (c.formative && typeof c.formative === 'object')
+    ? c.formative
+    : { label: String(c.formative || '—'), desc: '', polarity: '' };
+  const ability = (c.ability && typeof c.ability === 'object')
+    ? c.ability
+    : (pb.abilities.filter(function (a) { return a.key === c.ability; })[0] || { name: 'Ability', body: '', bonus: '' });
+
+  const statCards = pb.axisOrder.map(function (key) { return renderStatCard(c, pb, key); }).join('');
+
+  const skillRows = pb.skills.map(function (skill) {
+    let mod = -1, tag = 'Untrained';
+    if (c.skills.expert === skill) { mod = 2; tag = 'Expert'; }
+    else if (c.skills.trained.indexOf(skill) !== -1) { mod = 1; tag = 'Trained'; }
+    return '' +
+      '<div class="sheet-skill sheet-skill-' + tag.toLowerCase() + '">' +
+      '  <span>' + escapeHtml(skill) + '</span>' +
+      '  <span>' + (mod > 0 ? '+' + mod : mod) + '</span>' +
+      '</div>';
+  }).join('');
+
+  return '' +
+    '<div class="sheet">' +
+    '  <div class="sheet-topbar">' +
+    '    <button class="btn btn-ghost" data-action="go-home">&larr; The Loom</button>' +
+    '    <div class="sheet-topbar-actions">' +
+    (state.confirmDelete
+      ? ('<span class="confirm-delete-text">Delete for good?</span>' +
+         '<button class="btn btn-ghost" data-action="cancel-delete">Cancel</button>' +
+         '<button class="btn btn-danger btn-danger-solid" data-action="confirm-delete">Yes, delete</button>')
+      : ('<button class="btn btn-ghost" data-action="edit-character">Edit build</button>' +
+         '<button class="btn btn-ghost btn-danger" data-action="delete-character">Delete</button>')) +
+    '    </div>' +
+    '  </div>' +
+    '  <header class="sheet-header">' +
+    '    <p class="kicker">' + escapeHtml(pb.name) + ' Thread</p>' +
+    '    <h1>' + escapeHtml(c.name) + '</h1>' +
+    '    <p class="sheet-aspiration">' + escapeHtml(c.aspiration || '') + '</p>' +
+    '    <p class="sheet-formative"><strong>' + escapeHtml(formative.label) + '</strong>' + (formative.desc ? (' — ' + escapeHtml(formative.desc)) : '') + '</p>' +
+    '  </header>' +
+
+    '  <section class="sheet-section">' +
+    '    <h2>Harm &amp; Strain</h2>' +
+    renderTrackRow('harm', pb, c) +
+    renderTrackRow('strain', pb, c) +
+    '  </section>' +
+
+    '  <section class="sheet-section">' +
+    '    <h2>Threadcraft</h2>' +
+    renderKarmaSection(c, pb) +
+    '    <div class="stat-card-list">' + statCards + '</div>' +
+    '  </section>' +
+
+    '  <section class="sheet-section">' +
+    '    <h2>Training</h2>' +
+    '    <div class="sheet-skill-grid">' + skillRows + '</div>' +
+    '  </section>' +
+
+    '  <section class="sheet-section">' +
+    '    <h2>' + escapeHtml(ability.name || 'Ability') + '</h2>' +
+    '    <p class="sheet-ability-body">' + escapeHtml(ability.body || '') + '</p>' +
+    '    <p class="sheet-ability-bonus">' + escapeHtml(ability.bonus || '') + '</p>' +
+    '  </section>' +
+
+    '  <section class="sheet-section">' +
+    '    <h2>Notes</h2>' +
+    '    <textarea class="notes-area" data-field="notes" placeholder="Scratch notes, gear, allies...">' + escapeHtml(c.notes || '') + '</textarea>' +
+    '  </section>' +
+    '</div>';
+}
+
+/* ---------------- Event handling ---------------- */
+
+function currentCharacter() {
+  return state.characters.filter(function (c) { return c.id === state.activeId; })[0] || null;
+}
+
+async function persistActive(mutator) {
+  const original = currentCharacter();
+  if (!original) return;
+  // The character we hold may be a frozen db snapshot (see Store.init's
+  // onSnapshot) — never mutate it directly. Clone, mutate the clone, save that.
+  const c = JSON.parse(JSON.stringify(original));
+  mutator(c);
+  await Store.save(c);
+  showToast('Saved');
+  render();
+}
+
+document.addEventListener('click', async function (e) {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.getAttribute('data-action');
+
+  if (action === 'new-character') {
+    state.view = 'chooseThread';
+    render();
+  } else if (action === 'choose-thread') {
+    const playbookId = el.getAttribute('data-playbook');
+    state.draft = newDraft(playbookId);
+    state.wizardEditingId = null;
+    state.wizardStep = 0;
+    state.view = 'wizard';
+    render();
+  } else if (action === 'open-character') {
+    state.activeId = el.getAttribute('data-id');
+    state.confirmDelete = false;
+    state.view = 'sheet';
+    render();
+  } else if (action === 'go-home') {
+    state.confirmDelete = false;
+    state.view = 'home';
+    render();
+  } else if (action === 'wizard-cancel') {
+    state.view = state.wizardEditingId ? 'sheet' : 'home';
+    if (state.wizardEditingId) state.activeId = state.wizardEditingId;
+    render();
+  } else if (action === 'wizard-back') {
+    state.wizardStep = Math.max(0, state.wizardStep - 1);
+    render();
+  } else if (action === 'wizard-next') {
+    const pb = PLAYBOOKS[state.draft.playbookId];
+    if (stepValid(state.wizardStep, state.draft, pb)) {
+      state.wizardStep = Math.min(WIZARD_STEPS.length - 1, state.wizardStep + 1);
+      render();
+    }
+  } else if (action === 'wizard-save') {
+    const pb = PLAYBOOKS[state.draft.playbookId];
+    const finalized = finalizeCharacter(state.draft, pb);
+    await Store.save(finalized);
+    state.activeId = finalized.id;
+    state.view = 'sheet';
+    state.draft = null;
+    showToast('Thread saved');
+    render();
+  } else if (action === 'pun-name') {
+    const pb = PLAYBOOKS[state.draft.playbookId];
+    const pick = pb.punNames[Math.floor(Math.random() * pb.punNames.length)];
+    state.draft.name = pick;
+    render();
+  } else if (action === 'random-aspiration') {
+    const pb = PLAYBOOKS[state.draft.playbookId];
+    state.draft.aspiration = pb.aspirations[Math.floor(Math.random() * pb.aspirations.length)];
+    render();
+  } else if (action === 'random-formative') {
+    const pb = PLAYBOOKS[state.draft.playbookId];
+    const pick = pb.formativeExperiences[Math.floor(Math.random() * pb.formativeExperiences.length)];
+    state.draft.formative = pick.key;
+    render();
+  } else if (action === 'pick-aspiration') {
+    const pb = PLAYBOOKS[state.draft.playbookId];
+    const idx = parseInt(el.value, 10);
+    state.draft.aspiration = pb.aspirations[idx];
+    render();
+  } else if (action === 'pick-formative') {
+    state.draft.formative = el.value;
+    render();
+  } else if (action === 'pick-expert') {
+    const skill = el.value;
+    const d = state.draft;
+    d.skills.expert = skill;
+    d.skills.trained = d.skills.trained.filter(function (s) { return s !== skill; });
+    render();
+  } else if (action === 'pick-trained') {
+    const skill = el.value;
+    const d = state.draft;
+    if (el.checked) {
+      if (d.skills.trained.length < 3) d.skills.trained.push(skill);
+    } else {
+      d.skills.trained = d.skills.trained.filter(function (s) { return s !== skill; });
+    }
+    render();
+  } else if (action === 'pick-ability') {
+    state.draft.ability = el.value;
+    render();
+  } else if (action === 'edit-character') {
+    const c = currentCharacter();
+    state.draft = draftFromCharacter(c);
+    state.wizardEditingId = c.id;
+    state.wizardStep = 0;
+    state.view = 'wizard';
+    render();
+  } else if (action === 'delete-character') {
+    // window.confirm() is blocked inside the sandboxed artifact frame, so
+    // this is a two-click, in-page confirmation instead of a native dialog.
+    state.confirmDelete = true;
+    render();
+  } else if (action === 'cancel-delete') {
+    state.confirmDelete = false;
+    render();
+  } else if (action === 'confirm-delete') {
+    const c = currentCharacter();
+    if (c) {
+      await Store.remove(c.id);
+      state.confirmDelete = false;
+      state.view = 'home';
+      showToast('Thread removed');
+      render();
+    }
+  } else if (action === 'toggle-debility') {
+    const key = el.getAttribute('data-key');
+    await persistActive(function (c) { c.debilities[key] = !c.debilities[key]; });
+  } else if (action === 'karma-inc') {
+    await persistActive(function (c) { c.karma = (c.karma || 0) + 1; });
+  } else if (action === 'karma-dec') {
+    await persistActive(function (c) { c.karma = Math.max(0, (c.karma || 0) - 1); });
+  } else if (action === 'cycle-karma-boost') {
+    const key = el.getAttribute('data-key');
+    await persistActive(function (c) {
+      const pb = PLAYBOOKS[c.playbookId];
+      cycleKarmaBoost(pb, c, key);
+    });
+  } else if (action === 'roll') {
+    await persistActive(function (c) {
+      const pb = PLAYBOOKS[c.playbookId];
+      const staged = pb.axisOrder.reduce(function (sum, k) { return sum + (c.karmaBoost[k] || 0); }, 0);
+      if (c.karma >= staged) {
+        c.karma -= staged;
+        pb.axisOrder.forEach(function (k) { c.karmaBoost[k] = 0; });
+      }
+    });
+  } else if (action === 'track-inc' || action === 'track-dec') {
+    const kind = el.getAttribute('data-kind');
+    await persistActive(function (c) {
+      const pb = PLAYBOOKS[c.playbookId];
+      const max = pb[kind].max;
+      const delta = action === 'track-inc' ? 1 : -1;
+      c[kind] = clamp(c[kind] + delta, 0, max);
+    });
+  } else if (action && action.indexOf('set-') === 0) {
+    const kind = action.slice(4); // 'harm' | 'strain'
+    const idx = parseInt(el.getAttribute('data-index'), 10);
+    await persistActive(function (c) {
+      const target = idx + 1;
+      c[kind] = c[kind] === target ? idx : target;
+    });
+  }
+});
+
+document.addEventListener('change', function (e) {
+  const select = e.target.closest('[data-pool-field]');
+  if (select) {
+    const field = select.getAttribute('data-pool-field');
+    const val = select.value === '' ? null : parseInt(select.value, 10);
+    const d = state.draft;
+    if (field.indexOf('axis-') === 0) {
+      d.axisValues[field.slice(5)] = val;
+    }
+    render();
+    return;
+  }
+  const input = e.target.closest('[data-field]');
+  if (input) {
+    const field = input.getAttribute('data-field');
+    if (state.view === 'wizard') {
+      state.draft[field] = input.value;
+    } else if (state.view === 'sheet' && field === 'notes') {
+      persistActive(function (c) { c.notes = input.value; });
+    }
+  }
+});
+
+document.addEventListener('keydown', function (e) {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.matches && e.target.matches('[role="button"][data-action]')) {
+    e.preventDefault();
+    e.target.click();
+  }
+});
+
+document.addEventListener('input', function (e) {
+  const input = e.target.closest('[data-field="name"]');
+  if (input && state.view === 'wizard') {
+    state.draft.name = input.value;
+    // don't full re-render on every keystroke (keeps caret position); just validate footer
+    const nextBtn = document.querySelector('[data-action="wizard-next"]');
+    if (nextBtn) nextBtn.disabled = !stepValid(state.wizardStep, state.draft, PLAYBOOKS[state.draft.playbookId]);
+  }
+});
+
+/* ---------------- Init ---------------- */
+
+(async function init() {
+  await Store.init();
+  Store.subscribe(function (chars) {
+    state.characters = chars;
+    render();
+  });
+})();
+
 </script>
 </body>
 </html>
