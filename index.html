@@ -166,6 +166,24 @@ input, select, textarea { font-family: inherit; font-size: 1rem; color: var(--in
 
 .char-grid { display: flex; flex-direction: column; gap: 10px; }
 
+.world-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--thread);
+  border-radius: 3px;
+  cursor: pointer;
+  color: var(--ink);
+  font-size: 0.88rem;
+}
+.world-strip:hover { border-color: var(--accent); }
+.world-strip-label { color: var(--ink-dim); }
+.world-strip-value { font-weight: 700; }
+
 .thread-pick-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 .thread-pick-card {
   display: flex;
@@ -183,8 +201,33 @@ input, select, textarea { font-family: inherit; font-size: 1rem; color: var(--in
   color: var(--ink);
 }
 .thread-pick-card:hover { border-color: var(--accent); }
+.thread-pick-card-active { background: color-mix(in srgb, var(--accent-glow) 30%, var(--bg-panel)); border-color: var(--accent); }
 .thread-pick-name { font-family: var(--font-display); font-size: 1.15rem; }
 .thread-pick-sub { font-size: 0.82rem; color: var(--ink-dim); }
+.thread-pick-skills { font-size: 0.78rem; color: var(--accent); margin-top: 2px; }
+.age-current-tag {
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--accent-ink);
+  background: var(--accent);
+  padding: 1px 7px;
+  border-radius: 10px;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+.optional-tag {
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--ink-dim);
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--thread-strong);
+  padding: 1px 7px;
+  border-radius: 10px;
+  vertical-align: middle;
+  margin-left: 4px;
+}
 
 .char-card {
   display: flex;
@@ -267,12 +310,19 @@ input, select, textarea { font-family: inherit; font-size: 1rem; color: var(--in
 .pair-slash { color: var(--ink-dim); padding: 0 2px; }
 
 .pool-status { font-size: 0.88rem; color: var(--accent); font-weight: 600; margin-bottom: 14px; }
+.age-note { font-size: 0.85rem; color: var(--ink-dim); font-style: italic; margin: -4px 0 14px; }
 
 .axis-row, .style-row { margin-bottom: 18px; }
 .axis-row-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
 .axis-label { font-family: var(--font-display); font-size: 1.05rem; }
 .axis-hint { color: var(--ink-dim); font-size: 0.85rem; margin-bottom: 6px; }
 .axis-note { color: var(--ink-dim); font-size: 0.85rem; font-style: italic; }
+
+.style-examples { margin: 6px 0 0; padding-left: 20px; }
+.style-examples li { font-size: 0.82rem; color: var(--ink-dim); line-height: 1.4; margin-bottom: 2px; }
+.style-card-sheet { cursor: default; }
+.style-card-sheet:hover { border-color: var(--thread); }
+.style-card-sheet .style-examples { margin-top: 8px; }
 
 .pool-select {
   padding: 6px 10px;
@@ -297,7 +347,9 @@ input, select, textarea { font-family: inherit; font-size: 1rem; color: var(--in
   border-bottom: 1px solid var(--thread);
 }
 .skill-row:last-child { border-bottom: none; }
+.skill-name-wrap { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .skill-name { font-family: var(--font-display); }
+.skill-desc { font-size: 0.76rem; color: var(--ink-dim); line-height: 1.25; }
 .skill-toggle { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--ink-dim); white-space: nowrap; cursor: pointer; }
 .skill-toggle-disabled { opacity: 0.35; cursor: not-allowed; }
 
@@ -631,7 +683,10 @@ const SHARED_THREAD_DATA = {
     }
   },
 
-  skills: ['Athletics', 'Fighting', 'Influence', 'Medicine', 'Scouting', 'Craftwork', 'Investigation', 'Scholarship', 'Technology', 'Law'],
+  /* Skills are no longer fixed per Thread — see CORE_SKILLS and AGES
+     below. The available list depends on the world's Age (a shared,
+     group-level setting from the World Playbook), not the character's
+     Thread. */
 
   harm: { max: 6, badAt: 3, badLabel: 'Bloodied' },
   strain: { max: 4, badAt: 2, badLabel: 'Stressed' },
@@ -647,7 +702,50 @@ const SHARED_THREAD_DATA = {
     { key: 'disoriented', label: 'Disoriented', blurb: 'Senses scrambled.', stat: 'duration' }
   ],
 
-  karma: { maxPerRoll: 2 }
+  karma: { maxPerRoll: 2 },
+
+  /* Style is not one of the five stats — it's a separate read on *how* a
+     character tends to use their Thread. Players assign 1, 0, -1 across
+     the three Styles, one value each. Shared across every Thread. */
+  stylePool: [1, 0, -1],
+  styleTypes: [
+    {
+      key: 'force',
+      label: 'Force',
+      desc: 'Use your Thread to actively cause change, move things, or impose your will on the world.',
+      examples: [
+        'Push, pull, strike, or redirect something.',
+        'Accelerate or slow something.',
+        'Reshape or transform something.',
+        'Create an effect that damages or disrupts.',
+        'Move or alter another person or object.'
+      ]
+    },
+    {
+      key: 'protection',
+      label: 'Protection',
+      desc: 'Use your Thread to prevent change, resist harm, or shield yourself, others, or something important.',
+      examples: [
+        'Block or deflect an attack.',
+        'Reinforce an object or structure.',
+        'Resist an environmental hazard.',
+        'Prevent someone or something from being moved or altered.',
+        'Preserve, stabilize, or sustain something.'
+      ]
+    },
+    {
+      key: 'perception',
+      label: 'Perception',
+      desc: 'Use your Thread to sense, reveal, understand, or anticipate things through your connection to the Weave.',
+      examples: [
+        'Detect something hidden or distant.',
+        'Identify a substance, force, or phenomenon.',
+        'Sense an approaching threat.',
+        'See or hear beyond normal limits.',
+        'Understand how something works or where it is vulnerable.'
+      ]
+    }
+  ]
 };
 
 /* Builds one playbook from the shared chassis above, overriding only what
@@ -771,34 +869,270 @@ const PLAYBOOKS = {
 
 const PLAYBOOK_LIST = Object.keys(PLAYBOOKS); // extend this object to add more Threads later
 
+/* ---------------- Skills: Core + Age-dependent setting skills ---------------- */
+/* From the World Playbook: every world has the same 8 Core Skills, plus
+   setting skills determined by the group's chosen Age. Some Ages add one
+   setting skill, some add two. A skill's meaning can differ slightly by
+   Age (e.g. "Lore" and "Commerce" each carry a different blurb depending
+   on which Age granted them), so descriptions live per-Age rather than
+   in one global lookup. */
+
+const CORE_SKILLS = [
+  { name: 'Athletics', desc: 'Running, climbing, jumping, swimming, lifting, physical exertion' },
+  { name: 'Fighting', desc: 'Melee combat, ranged weapons, martial techniques, combat tactics' },
+  { name: 'Influence', desc: 'Persuasion, negotiation, leadership, intimidation, social maneuvering' },
+  { name: 'Medicine', desc: 'Treating injuries, illness, anatomy, diagnosis, first aid' },
+  { name: 'Scouting', desc: 'Tracking, navigation, stealth, reconnaissance, finding safe routes' },
+  { name: 'Craftwork', desc: 'Building, repairing, modifying, and working with physical materials' },
+  { name: 'Investigation', desc: 'Searching for clues, reconstructing events, following evidence, solving mysteries' },
+  { name: 'Scholarship', desc: 'Academic knowledge, history, languages, mathematics, formal study' }
+];
+
+const AGES = {
+  mythic: {
+    id: 'mythic',
+    name: 'Mythic Age',
+    blurb: 'Bronze age kingdoms, city-states, monsters.',
+    settingSkills: [
+      { name: 'Lore', desc: 'Myths, ancient traditions, supernatural knowledge, monsters, sacred practices' }
+    ]
+  },
+  kingdoms: {
+    id: 'kingdoms',
+    name: 'Age of Kingdoms',
+    blurb: 'Classic fantasy. Castles, guilds, trade routes.',
+    settingSkills: [
+      { name: 'Commerce', desc: 'Trade, markets, guilds, appraisal, contracts, logistics' }
+    ]
+  },
+  industry: {
+    id: 'industry',
+    name: 'Age of Industry',
+    blurb: 'Steam power and early machines.',
+    settingSkills: [
+      { name: 'Engineering', desc: 'Machines, mechanisms, engines, industrial systems' },
+      { name: 'Commerce', desc: 'Business, markets, trade, logistics' }
+    ]
+  },
+  modern: {
+    id: 'modern',
+    name: 'Modern Age',
+    blurb: 'Cities, corporations, communications.',
+    settingSkills: [
+      { name: 'Technology', desc: 'Computers, electronics, communications, modern infrastructure' },
+      { name: 'Law', desc: 'Legal systems, regulations, institutions, rights, procedures' }
+    ]
+  },
+  ruins: {
+    id: 'ruins',
+    name: 'Age of Ruins',
+    blurb: 'A fallen civilization once understood the Threads better than anyone alive today.',
+    settingSkills: [
+      { name: 'Scavenging', desc: 'Finding, identifying, recovering, and repurposing useful remnants' },
+      { name: 'Lore', desc: 'Understanding the lost civilization and its relationship to the Threads' }
+    ]
+  }
+};
+
+const AGE_LIST = Object.keys(AGES);
+
+/* ---------------- World Playbook ---------------- */
+/* The group answers these together, once per world — shared data, same
+   as Age was on its own. Age is the only question with a mechanical tie-in
+   (setting skills, via AGES above); everything else is pure reference
+   material for the table, but stored and shown the same way so it's easy
+   to look back up during play. */
+
+const WORLD_QUESTIONS = [
+  {
+    key: 'age',
+    title: 'The Age',
+    prompt: 'What kind of world is this?',
+    optional: false,
+    options: AGE_LIST.map(function (id) {
+      const a = AGES[id];
+      return { key: id, label: a.name, desc: a.blurb };
+    })
+  },
+  {
+    key: 'emergence',
+    title: 'The Emergence',
+    prompt: 'How long have the Threads been known?',
+    optional: false,
+    options: [
+      { key: 'ancient', label: 'Ancient', desc: 'Thousands of years. Thread Weavers shape civilization. Advantages: established schools, extensive knowledge. Disadvantages: rigid traditions.' },
+      { key: 'generational', label: 'Generational', desc: 'Known for roughly a century. Most institutions understand them. Power struggles are common.' },
+      { key: 'recent', label: 'Recent', desc: 'Known for decades. Society is adapting rapidly. Many opportunities.' },
+      { key: 'ongoing', label: 'Ongoing', desc: 'The phenomenon is happening right now. New practitioners appear every year. Nobody understands why.' }
+    ]
+  },
+  {
+    key: 'attitude',
+    title: 'Public Attitude',
+    prompt: 'How does society view practitioners?',
+    optional: false,
+    options: [
+      { key: 'reverence', label: 'Reverence', desc: 'Living saints.' },
+      { key: 'respect', label: 'Respect', desc: 'Useful specialists.' },
+      { key: 'suspicion', label: 'Suspicion', desc: 'Potential threats.' },
+      { key: 'fear', label: 'Fear', desc: 'Dangerous anomalies.' },
+      { key: 'persecution', label: 'Persecution', desc: 'Actively hunted.' }
+    ]
+  },
+  {
+    key: 'power',
+    title: 'Who Holds Power?',
+    prompt: 'This is one of the most important questions.',
+    optional: false,
+    options: [
+      { key: 'kingdoms', label: 'Kingdoms', desc: 'Nobles and rulers.' },
+      { key: 'academies', label: 'Academies', desc: 'Natural philosophers dominate.' },
+      { key: 'guilds', label: 'Guilds', desc: 'Economic power controls everything.' },
+      { key: 'faiths', label: 'Faiths', desc: 'Religion shapes society.' },
+      { key: 'practitioners', label: 'Practitioners', desc: 'Thread Weavers openly rule.' }
+    ]
+  },
+  {
+    key: 'threat',
+    title: 'The Greatest Threat',
+    prompt: 'This gives the GM immediate campaign fuel.',
+    optional: false,
+    options: [
+      { key: 'war', label: 'War', desc: 'Nations prepare for conflict.' },
+      { key: 'monsters', label: 'Monsters', desc: 'The wild places are growing dangerous.' },
+      { key: 'collapse', label: 'Collapse', desc: 'Society is breaking down.' },
+      { key: 'unknown', label: 'The Unknown', desc: 'No one understands the Threads.' },
+      { key: 'beyond', label: 'The Beyond', desc: 'Something is emerging from outside reality.' }
+    ]
+  },
+  {
+    key: 'adventure',
+    title: 'The Shape of Adventure',
+    prompt: '',
+    optional: false,
+    options: [
+      { key: 'exploration', label: 'Exploration', desc: 'Discovering lost places.' },
+      { key: 'intrigue', label: 'Intrigue', desc: 'Politics and conspiracies.' },
+      { key: 'conflict', label: 'Conflict', desc: 'War and revolution.' },
+      { key: 'discovery', label: 'Discovery', desc: 'Understanding the Threads.' },
+      { key: 'survival', label: 'Survival', desc: 'Enduring a dangerous world.' }
+    ]
+  },
+  {
+    key: 'uniqueFeature',
+    title: 'What Makes This World Unique?',
+    prompt: '',
+    optional: true,
+    options: [
+      { key: 'deadSpeak', label: 'The Dead Speak', desc: 'The departed remain accessible.' },
+      { key: 'monstersThreads', label: 'Monsters Wield Threads', desc: 'Creatures can manipulate reality too.' },
+      { key: 'realityWeakening', label: 'Reality Is Weakening', desc: 'The laws of nature are becoming unstable.' },
+      { key: 'skyClosed', label: 'The Sky Is Closed', desc: 'No one can reach what lies beyond.' },
+      { key: 'ancientPractitioners', label: 'Ancient Practitioners Still Live', desc: 'Somehow.' }
+    ]
+  }
+];
+
+const WORLD_REQUIRED_KEYS = WORLD_QUESTIONS.filter(function (q) { return !q.optional; }).map(function (q) { return q.key; });
+
+function coreSkillNames() {
+  return CORE_SKILLS.map(function (s) { return s.name; });
+}
+
+function ageSkillNames(ageId) {
+  const age = AGES[ageId];
+  return age ? age.settingSkills.map(function (s) { return s.name; }) : [];
+}
+
+/* The full skill list a character creator/sheet should offer right now:
+   Core + whatever the world's current Age adds, plus any already-chosen
+   skill names that wouldn't otherwise appear (e.g. a character built
+   under a since-changed Age keeps showing its actual pick rather than
+   silently hiding it). */
+function availableSkillList(world, extraNames) {
+  let list = coreSkillNames();
+  if (world && world.age) list = list.concat(ageSkillNames(world.age));
+  (extraNames || []).forEach(function (n) {
+    if (n && list.indexOf(n) === -1) list.push(n);
+  });
+  return list;
+}
+
+/* Looks up a skill's blurb: Core first, then the active Age, then falls
+   back to searching every Age (covers a skill picked under a different
+   Age than the one currently set). */
+function skillDescription(name, activeAgeId) {
+  const core = CORE_SKILLS.filter(function (s) { return s.name === name; })[0];
+  if (core) return core.desc;
+  const active = activeAgeId ? AGES[activeAgeId] : null;
+  if (active) {
+    const match = active.settingSkills.filter(function (s) { return s.name === name; })[0];
+    if (match) return match.desc;
+  }
+  for (let i = 0; i < AGE_LIST.length; i++) {
+    const age = AGES[AGE_LIST[i]];
+    const match = age.settingSkills.filter(function (s) { return s.name === name; })[0];
+    if (match) return match.desc;
+  }
+  return '';
+}
+
+
 /* ---------------- Storage abstraction ---------------- */
-/* Prefers the `db` capability (private per-viewer docs under
-   data/users/<id>/); falls back to localStorage when db/user
-   aren't available so the app still works. */
+/* Characters prefer the `db` capability's private per-viewer docs under
+   data/users/<id>/ (falling back to localStorage when db/user aren't
+   available). The world's Age is a group-level decision, though — the
+   whole table should see and be able to set the same one — so it lives
+   at a SHARED path (world/settings) instead, visible and writable by
+   anyone who opens this app, the same way the rest of the db capability's
+   shared documents default to working. */
 
 const Store = (function () {
-  const LOCAL_KEY = 'weaveborn_characters_v1';
+  const LOCAL_CHAR_KEY = 'weaveborn_characters_v1';
+  const LOCAL_WORLD_KEY = 'weaveborn_world_v1';
   let backend = null; // 'db' | 'local'
-  let col = null;
+  let col = null;        // private character collection: data/users/<uid>
+  let worldRef = null;   // shared doc: world/settings
   let listeners = [];
+  let worldListeners = [];
   let cache = [];
+  let world = { age: null };
 
   function notify() {
     listeners.forEach(function (fn) { fn(cache.slice()); });
   }
 
-  function localList() {
+  function notifyWorld() {
+    worldListeners.forEach(function (fn) { fn(Object.assign({}, world)); });
+  }
+
+  function localCharList() {
     try {
-      const raw = window.localStorage.getItem(LOCAL_KEY);
+      const raw = window.localStorage.getItem(LOCAL_CHAR_KEY);
       return raw ? JSON.parse(raw) : [];
     } catch (e) {
       return [];
     }
   }
 
-  function localWrite(list) {
+  function localCharWrite(list) {
     try {
-      window.localStorage.setItem(LOCAL_KEY, JSON.stringify(list));
+      window.localStorage.setItem(LOCAL_CHAR_KEY, JSON.stringify(list));
+    } catch (e) { /* storage unavailable; ignore */ }
+  }
+
+  function localWorldRead() {
+    try {
+      const raw = window.localStorage.getItem(LOCAL_WORLD_KEY);
+      return raw ? JSON.parse(raw) : { age: null };
+    } catch (e) {
+      return { age: null };
+    }
+  }
+
+  function localWorldWrite(w) {
+    try {
+      window.localStorage.setItem(LOCAL_WORLD_KEY, JSON.stringify(w));
     } catch (e) { /* storage unavailable; ignore */ }
   }
 
@@ -817,13 +1151,23 @@ const Store = (function () {
           }, function () {
             // subscription died; keep whatever we last had
           });
+
+          worldRef = dbCap.doc('world/settings');
+          worldRef.onSnapshot(function (snap) {
+            world = (snap.exists && snap.data()) ? snap.data() : { age: null };
+            notifyWorld();
+          }, function () {
+            // subscription died; keep whatever we last had
+          });
           return;
         }
       }
     } catch (e) { /* fall through to local */ }
     backend = 'local';
-    cache = localList();
+    cache = localCharList();
+    world = localWorldRead();
     notify();
+    notifyWorld();
   }
 
   function subscribe(fn) {
@@ -831,6 +1175,14 @@ const Store = (function () {
     fn(cache.slice());
     return function () {
       listeners = listeners.filter(function (l) { return l !== fn; });
+    };
+  }
+
+  function subscribeWorld(fn) {
+    worldListeners.push(fn);
+    fn(Object.assign({}, world));
+    return function () {
+      worldListeners = worldListeners.filter(function (l) { return l !== fn; });
     };
   }
 
@@ -847,7 +1199,7 @@ const Store = (function () {
     if (backend === 'db' && col) {
       await col.doc(character.id).set(character);
     } else {
-      localWrite(cache);
+      localCharWrite(cache);
     }
   }
 
@@ -857,13 +1209,34 @@ const Store = (function () {
     if (backend === 'db' && col) {
       await col.doc(id).delete();
     } else {
-      localWrite(cache);
+      localCharWrite(cache);
+    }
+  }
+
+  async function saveWorld(patch) {
+    // Merge, don't replace: db .set() writes the WHOLE document, so a
+    // caller answering just one question would otherwise wipe the rest.
+    const w = Object.assign({}, world, JSON.parse(JSON.stringify(patch)));
+    world = w;
+    notifyWorld();
+    if (backend === 'db' && worldRef) {
+      await worldRef.set(w);
+    } else {
+      localWorldWrite(w);
     }
   }
 
   function backendName() { return backend; }
 
-  return { init: init, subscribe: subscribe, save: save, remove: remove, backendName: backendName };
+  return {
+    init: init,
+    subscribe: subscribe,
+    save: save,
+    remove: remove,
+    backendName: backendName,
+    subscribeWorld: subscribeWorld,
+    saveWorld: saveWorld
+  };
 })();
 
 /* ---------------- Utilities ---------------- */
@@ -953,10 +1326,14 @@ function normalizeCharacter(c) {
   if (typeof c.karma !== 'number') c.karma = 0;
   if (!c.karmaBoost) c.karmaBoost = {};
   if (!c.axisValues) c.axisValues = {};
+  if (!c.styleValues) c.styleValues = {};
   if (!c.debilities) c.debilities = {};
   pb.axisOrder.forEach(function (k) {
     if (typeof c.karmaBoost[k] !== 'number') c.karmaBoost[k] = 0;
     if (typeof c.axisValues[k] !== 'number') c.axisValues[k] = 0;
+  });
+  pb.styleTypes.forEach(function (s) {
+    if (typeof c.styleValues[s.key] !== 'number') c.styleValues[s.key] = 0;
   });
   pb.debilities.forEach(function (d) {
     if (typeof c.debilities[d.key] !== 'boolean') c.debilities[d.key] = false;
@@ -970,20 +1347,23 @@ function normalizeCharacter(c) {
 /* ---------------- App state ---------------- */
 
 const state = {
-  view: 'home', // 'home' | 'chooseThread' | 'wizard' | 'sheet'
+  view: 'home', // 'home' | 'chooseThread' | 'worldPlaybook' | 'wizard' | 'sheet'
   characters: [],
   activeId: null,
   wizardStep: 0,
   wizardEditingId: null,
   draft: null,
   toast: null,
-  confirmDelete: false
+  confirmDelete: false,
+  world: { age: null }
 };
 
 function newDraft(playbookId) {
   const pb = PLAYBOOKS[playbookId];
   const axisValues = {};
   pb.axisOrder.forEach(function (k) { axisValues[k] = null; });
+  const styleValues = {};
+  pb.styleTypes.forEach(function (s) { styleValues[s.key] = null; });
   const karmaBoost = {};
   pb.axisOrder.forEach(function (k) { karmaBoost[k] = 0; });
   const debilities = {};
@@ -995,6 +1375,7 @@ function newDraft(playbookId) {
     aspiration: null,   // text string once chosen
     formative: null,    // key string once chosen (resolved to an object at save time)
     axisValues: axisValues,
+    styleValues: styleValues,
     skills: { expert: null, trained: [] },
     ability: null,      // key string once chosen (resolved to an object at save time)
     harm: 0,
@@ -1038,6 +1419,7 @@ const root = document.getElementById('app');
 function render() {
   if (state.view === 'home') root.innerHTML = renderHome();
   else if (state.view === 'chooseThread') root.innerHTML = renderChooseThread();
+  else if (state.view === 'worldPlaybook') root.innerHTML = renderWorldPlaybook();
   else if (state.view === 'wizard') root.innerHTML = renderWizard();
   else if (state.view === 'sheet') root.innerHTML = renderSheet();
   renderToast();
@@ -1091,9 +1473,63 @@ function renderHome() {
     '  <h1>The Loom</h1>' +
     '  <p class="home-sub">Your woven Threads, ready to pick back up.</p>' +
     '</header>' +
+    '<button class="world-strip" data-action="open-world">' +
+    '  <span class="world-strip-label">World Playbook</span>' +
+    '  <span class="world-strip-value">' + worldSummaryText() + '</span>' +
+    '</button>' +
     list +
     '<button class="btn btn-primary btn-new" data-action="new-character">Weave a new Thread</button>' +
     '<p class="storage-note">' + backendNote + '</p>';
+}
+
+function worldSummaryText() {
+  const world = state.world || {};
+  const answeredCount = WORLD_REQUIRED_KEYS.filter(function (k) { return !!world[k]; }).length;
+  if (answeredCount === 0) return 'Not started — tap to begin';
+  const ageLabel = world.age ? AGES[world.age].name : 'Age not set';
+  return ageLabel + ' · ' + answeredCount + '/' + WORLD_REQUIRED_KEYS.length + ' answered';
+}
+
+/* ---------------- World Playbook view ---------------- */
+/* Shared, group-level answers from the World Playbook — anyone who opens
+   this app can see and change them, same as the rest of this app's
+   shared data defaults to working. Doubles as the reference view: every
+   option's full text stays visible here, not just the chosen one, so the
+   table can look back up what a choice actually means. Age is the only
+   question that also changes character creation (setting skills). */
+
+function renderWorldPlaybook() {
+  const world = state.world || {};
+  const sections = WORLD_QUESTIONS.map(function (q) {
+    const answer = world[q.key];
+    const cards = q.options.map(function (opt) {
+      const active = answer === opt.key;
+      const skillTag = (q.key === 'age' && AGES[opt.key])
+        ? ('<span class="thread-pick-skills">Adds: ' + escapeHtml(AGES[opt.key].settingSkills.map(function (s) { return s.name; }).join(' & ')) + '</span>')
+        : '';
+      return '' +
+        '<button class="thread-pick-card' + (active ? ' thread-pick-card-active' : '') + '" data-action="answer-world" data-question="' + q.key + '" data-option="' + opt.key + '">' +
+        '  <span class="thread-pick-name">' + escapeHtml(opt.label) + (active ? ' <span class="age-current-tag">chosen</span>' : '') + '</span>' +
+        '  <span class="thread-pick-sub">' + escapeHtml(opt.desc) + '</span>' +
+        skillTag +
+        '</button>';
+    }).join('');
+    return '' +
+      '<section class="wiz-section world-question">' +
+      '  <h2>' + escapeHtml(q.title) + (q.optional ? ' <span class="optional-tag">optional</span>' : '') + '</h2>' +
+      (q.prompt ? ('<p class="wiz-hint">' + escapeHtml(q.prompt) + '</p>') : '') +
+      '  <div class="thread-pick-grid">' + cards + '</div>' +
+      '</section>';
+  }).join('');
+
+  return '' +
+    '<header class="home-header">' +
+    '  <p class="kicker">Weaveborn</p>' +
+    '  <h1>World Playbook</h1>' +
+    '  <p class="home-sub">Decide this together. Shared and editable by anyone who opens this app. Tap a chosen answer again to clear it. The Age also decides which setting skills characters can train.</p>' +
+    '</header>' +
+    sections +
+    '<button class="btn btn-ghost btn-new" data-action="go-home">Back to the Loom</button>';
 }
 
 /* ---------------- Choose Thread view ---------------- */
@@ -1178,7 +1614,12 @@ function renderWizard() {
 
 function stepValid(stepIdx, d, pb) {
   if (stepIdx === 0) return !!(d.name.trim() && d.aspiration !== null && d.formative !== null);
-  if (stepIdx === 1) return poolFullyAssigned(pb.axisPool, d.axisValues, pb.axisOrder);
+  if (stepIdx === 1) {
+    const axesDone = poolFullyAssigned(pb.axisPool, d.axisValues, pb.axisOrder);
+    const styleKeys = pb.styleTypes.map(function (s) { return s.key; });
+    const stylesDone = poolFullyAssigned(pb.stylePool, d.styleValues, styleKeys);
+    return axesDone && stylesDone;
+  }
   if (stepIdx === 2) return d.skills.expert !== null && d.skills.trained.length === 3;
   if (stepIdx === 3) return d.ability !== null;
   return true;
@@ -1269,23 +1710,59 @@ function stepThreadcraft(d, pb) {
 
   const axisPoolLeft = poolRemainingSummary(pb.axisPool, d.axisValues, pb.axisOrder);
 
+  const styleKeys = pb.styleTypes.map(function (s) { return s.key; });
+  const styleRows = pb.styleTypes.map(function (s) {
+    const options = remainingPoolFor(pb.stylePool, d.styleValues, s.key);
+    const current = d.styleValues[s.key];
+    const selectHtml = poolSelect('style-' + s.key, options, current);
+    const examplesHtml = '<ul class="style-examples">' + s.examples.map(function (ex) { return '<li>' + escapeHtml(ex) + '</li>'; }).join('') + '</ul>';
+    return '' +
+      '<div class="style-row">' +
+      '  <div class="axis-row-head">' +
+      '    <span class="axis-label">' + escapeHtml(s.label) + '</span>' +
+      selectHtml +
+      '  </div>' +
+      '  <p class="axis-hint">' + escapeHtml(s.desc) + '</p>' +
+      examplesHtml +
+      '</div>';
+  }).join('');
+
+  const stylePoolLeft = poolRemainingSummary(pb.stylePool, d.styleValues, styleKeys);
+
   return '' +
     '<section class="wiz-section">' +
     '  <h2>Threadcraft</h2>' +
     '  <p class="wiz-hint">Assign <strong>' + pb.axisPool.join(', ') + '</strong> across your five ratings — one value each.</p>' +
     '  <p class="pool-status">' + axisPoolLeft + '</p>' +
     axisRows +
+    '</section>' +
+    '<section class="wiz-section">' +
+    '  <h2>Style</h2>' +
+    '  <p class="wiz-hint">Assign <strong>' + pb.stylePool.join(', ') + '</strong> across the three Styles — how you tend to use your Thread, not how big an effect you can make.</p>' +
+    '  <p class="pool-status">' + stylePoolLeft + '</p>' +
+    styleRows +
     '</section>';
 }
 
 function stepTraining(d, pb) {
-  const rows = pb.skills.map(function (skill) {
+  const world = state.world;
+  const alreadyChosen = d.skills.expert ? [d.skills.expert].concat(d.skills.trained) : d.skills.trained;
+  const skillList = availableSkillList(world, alreadyChosen);
+  const ageNote = (world && world.age)
+    ? ('Includes setting skills from ' + escapeHtml(AGES[world.age].name) + '.')
+    : 'World Age isn\u2019t set yet, so only Core Skills are shown. Set it from the Loom to unlock setting skills — or come back and edit this later.';
+
+  const rows = skillList.map(function (skill) {
     const isExpert = d.skills.expert === skill;
     const isTrained = d.skills.trained.indexOf(skill) !== -1;
     const trainedDisabled = !isTrained && !isExpert && d.skills.trained.length >= 3;
+    const desc = skillDescription(skill, world ? world.age : null);
     return '' +
       '<div class="skill-row">' +
-      '  <span class="skill-name">' + escapeHtml(skill) + '</span>' +
+      '  <span class="skill-name-wrap">' +
+      '    <span class="skill-name">' + escapeHtml(skill) + '</span>' +
+      (desc ? ('<span class="skill-desc">' + escapeHtml(desc) + '</span>') : '') +
+      '  </span>' +
       '  <label class="skill-toggle">' +
       '    <input type="radio" name="expert-skill" data-action="pick-expert" value="' + escapeHtml(skill) + '" ' + (isExpert ? 'checked' : '') + ' />' +
       '    Expert (+2)' +
@@ -1301,6 +1778,7 @@ function stepTraining(d, pb) {
     '<section class="wiz-section">' +
     '  <h2>Training</h2>' +
     '  <p class="wiz-hint">Pick 1 Expert (+2) and 3 Trained (+1). Everything else stays Untrained (-1).</p>' +
+    '  <p class="age-note">' + ageNote + '</p>' +
     '  <p class="pool-status">Expert: ' + (d.skills.expert ? escapeHtml(d.skills.expert) : '—') + ' &nbsp;·&nbsp; Trained: ' + d.skills.trained.length + '/3</p>' +
     '  <div class="skill-list">' + rows + '</div>' +
     '</section>';
@@ -1332,6 +1810,10 @@ function stepReview(d, pb) {
   const axisSummary = pb.axisOrder.map(function (k) {
     return '<span class="review-chip">' + pb.axes[k].label + ' ' + d.axisValues[k] + '</span>';
   }).join('');
+  const styleSummary = pb.styleTypes.map(function (s) {
+    const v = d.styleValues[s.key];
+    return '<span class="review-chip">' + s.label + ' ' + (v > 0 ? '+' + v : v) + '</span>';
+  }).join('');
 
   return '' +
     '<section class="wiz-section">' +
@@ -1340,6 +1822,7 @@ function stepReview(d, pb) {
     '  <p class="review-line">' + escapeHtml(d.aspiration) + '</p>' +
     '  <p class="review-line">' + escapeHtml(formative.label) + ' <span class="pair-slash">·</span> ' + escapeHtml(formative.desc) + '</p>' +
     '  <div class="review-chips">' + axisSummary + '</div>' +
+    '  <div class="review-chips">' + styleSummary + '</div>' +
     '  <p class="review-line">Expert: ' + escapeHtml(d.skills.expert) + ' &nbsp;·&nbsp; Trained: ' + d.skills.trained.map(escapeHtml).join(', ') + '</p>' +
     '  <p class="review-line">' + (ability ? escapeHtml(ability.name) : '') + '</p>' +
     '</section>';
@@ -1415,6 +1898,24 @@ function renderStatCard(c, pb, key) {
     '</div>';
 }
 
+/* Style is a flat 1/0/-1 modifier chosen once at creation — not tied to
+   Karma or Debilities, so the sheet card is a plain read-out, not a
+   button. The examples stay visible for quick reference during play. */
+function renderStyleCard(c, pb, styleKey) {
+  const style = pb.styleTypes.filter(function (s) { return s.key === styleKey; })[0];
+  const val = c.styleValues[styleKey];
+  const examplesHtml = '<ul class="style-examples">' + style.examples.map(function (ex) { return '<li>' + escapeHtml(ex) + '</li>'; }).join('') + '</ul>';
+  return '' +
+    '<div class="stat-card style-card-sheet">' +
+    '  <div class="stat-card-top">' +
+    '    <span class="stat-card-label">' + escapeHtml(style.label) + '</span>' +
+    '    <span class="stat-card-total">' + (val > 0 ? '+' + val : val) + '</span>' +
+    '  </div>' +
+    '  <p class="stat-card-desc">' + escapeHtml(style.desc) + '</p>' +
+    examplesHtml +
+    '</div>';
+}
+
 function renderSheet() {
   const c = state.characters.filter(function (ch) { return ch.id === state.activeId; })[0];
   if (!c) { state.view = 'home'; return renderHome(); }
@@ -1429,8 +1930,11 @@ function renderSheet() {
     : (pb.abilities.filter(function (a) { return a.key === c.ability; })[0] || { name: 'Ability', body: '', bonus: '' });
 
   const statCards = pb.axisOrder.map(function (key) { return renderStatCard(c, pb, key); }).join('');
+  const styleCards = pb.styleTypes.map(function (s) { return renderStyleCard(c, pb, s.key); }).join('');
 
-  const skillRows = pb.skills.map(function (skill) {
+  const sheetSkillChosen = c.skills.expert ? [c.skills.expert].concat(c.skills.trained) : c.skills.trained;
+  const sheetSkillList = availableSkillList(state.world, sheetSkillChosen);
+  const skillRows = sheetSkillList.map(function (skill) {
     let mod = -1, tag = 'Untrained';
     if (c.skills.expert === skill) { mod = 2; tag = 'Expert'; }
     else if (c.skills.trained.indexOf(skill) !== -1) { mod = 1; tag = 'Trained'; }
@@ -1471,6 +1975,8 @@ function renderSheet() {
     '    <h2>Threadcraft</h2>' +
     renderKarmaSection(c, pb) +
     '    <div class="stat-card-list">' + statCards + '</div>' +
+    '    <h3 class="sheet-subhead">Style</h3>' +
+    '    <div class="stat-card-list">' + styleCards + '</div>' +
     '  </section>' +
 
     '  <section class="sheet-section">' +
@@ -1523,6 +2029,23 @@ document.addEventListener('click', async function (e) {
     state.wizardEditingId = null;
     state.wizardStep = 0;
     state.view = 'wizard';
+    render();
+  } else if (action === 'open-world') {
+    state.view = 'worldPlaybook';
+    render();
+  } else if (action === 'answer-world') {
+    const qKey = el.getAttribute('data-question');
+    const optKey = el.getAttribute('data-option');
+    const current = state.world ? state.world[qKey] : null;
+    const next = current === optKey ? null : optKey; // tap the chosen answer again to clear it
+    const patch = {};
+    patch[qKey] = next;
+    await Store.saveWorld(patch);
+    if (next) {
+      const q = WORLD_QUESTIONS.filter(function (item) { return item.key === qKey; })[0];
+      const opt = q.options.filter(function (o) { return o.key === optKey; })[0];
+      showToast(q.title + ': ' + opt.label);
+    }
     render();
   } else if (action === 'open-character') {
     state.activeId = el.getAttribute('data-id');
@@ -1667,6 +2190,8 @@ document.addEventListener('change', function (e) {
     const d = state.draft;
     if (field.indexOf('axis-') === 0) {
       d.axisValues[field.slice(5)] = val;
+    } else if (field.indexOf('style-') === 0) {
+      d.styleValues[field.slice(6)] = val;
     }
     render();
     return;
@@ -1705,6 +2230,10 @@ document.addEventListener('input', function (e) {
   await Store.init();
   Store.subscribe(function (chars) {
     state.characters = chars;
+    render();
+  });
+  Store.subscribeWorld(function (w) {
+    state.world = w;
     render();
   });
 })();
