@@ -251,6 +251,9 @@ input, select, textarea { font-family: inherit; font-size: 1rem; color: var(--in
 .pip-bad { color: var(--harm); font-weight: 700; }
 
 .storage-note { margin-top: 20px; font-size: 0.8rem; color: var(--ink-dim); text-align: center; }
+.loom-utility-row { display: flex; gap: 10px; }
+.loom-utility-row .btn { flex: 1; }
+.file-input-hidden { display: none; }
 
 /* ===========================================================
    Wizard
@@ -320,8 +323,6 @@ input, select, textarea { font-family: inherit; font-size: 1rem; color: var(--in
 
 .style-examples { margin: 6px 0 0; padding-left: 20px; }
 .style-examples li { font-size: 0.82rem; color: var(--ink-dim); line-height: 1.4; margin-bottom: 2px; }
-.style-card-sheet { cursor: default; }
-.style-card-sheet:hover { border-color: var(--thread); }
 .style-card-sheet .style-examples { margin-top: 8px; }
 
 .pool-select {
@@ -468,27 +469,52 @@ input, select, textarea { font-family: inherit; font-size: 1rem; color: var(--in
 .karma-staged-tag { color: var(--accent); font-weight: 700; }
 .btn-roll { display: block; width: 100%; margin-bottom: 20px; }
 
-/* Stat cards (Threadcraft, sheet view) — the whole card is the Karma-boost
-   control; the debility pill and any focusable child intercept their own
-   clicks via event delegation (closest() matches the nearer element). */
+/* Stat cards (Threadcraft, sheet view) — split into two independent
+   buttons rather than a card-wide click target with a button nested
+   inside it, which was unreliable to tap precisely on touch devices. */
 .stat-card-list { display: flex; flex-direction: column; gap: 8px; }
 .stat-card {
-  padding: 10px 12px;
   border: 1px solid var(--thread);
   border-radius: 3px;
   background: var(--bg-panel);
-  cursor: pointer;
-  transition: border-color 120ms ease, background 120ms ease;
+  overflow: hidden;
 }
-.stat-card:hover { border-color: var(--accent); }
-.stat-card:active { background: var(--bg-panel-alt); }
-.stat-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.stat-card-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-.stat-card-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.stat-card-top { display: flex; align-items: stretch; justify-content: space-between; }
+.style-card-sheet .stat-card-top { padding: 10px 12px; align-items: center; }
+.stat-card-zone {
+  flex: 1 1 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 120ms ease;
+}
+.stat-card-zone:hover { background: var(--bg-panel-alt); }
+.stat-card-zone:active { background: var(--bg-panel-alt); }
+.stat-card-zone:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.stat-card-zone:disabled { cursor: default; opacity: 0.5; }
+
+.stat-card-zone-debility {
+  align-items: flex-start;
+  border-right: 1px solid var(--thread);
+}
+.stat-card-zone-debility-active { background: color-mix(in srgb, var(--harm) 16%, var(--bg-panel)); }
+.stat-card-zone-debility-active:hover { background: color-mix(in srgb, var(--harm) 24%, var(--bg-panel)); }
+
+.stat-card-zone-karma { align-items: flex-end; text-align: right; }
+
 .stat-card-label { font-family: var(--font-display); font-size: 1.02rem; }
 
-.stat-card-total-wrap { display: flex; align-items: baseline; gap: 5px; flex-shrink: 0; }
+.stat-card-debility-name { font-size: 0.76rem; color: var(--ink-dim); }
+.stat-card-debility-name-active { color: var(--harm); font-weight: 700; }
+
 .stat-card-total { font-family: var(--font-display); font-size: 1.45rem; color: var(--ink-dim); line-height: 1; }
 .stat-card-total-modified { color: var(--accent); }
 .stat-card-boost-tag {
@@ -500,19 +526,7 @@ input, select, textarea { font-family: inherit; font-size: 1rem; color: var(--in
   border-radius: 10px;
 }
 
-.stat-card-desc { margin: 4px 0 0; font-size: 0.85rem; color: var(--ink-dim); }
-
-.debility-pill {
-  font-size: 0.74rem;
-  padding: 3px 9px;
-  border: 1px solid var(--thread-strong);
-  border-radius: 20px;
-  background: transparent;
-  color: var(--ink-dim);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-.debility-pill-active { background: var(--harm); border-color: var(--harm); color: #fff; }
+.stat-card-desc { margin: 0; padding: 8px 12px 10px; font-size: 0.85rem; color: var(--ink-dim); border-top: 1px solid var(--thread); }
 
 .sheet-axis-grid { display: flex; flex-wrap: wrap; gap: 10px; }
 .sheet-axis {
@@ -1253,6 +1267,114 @@ function escapeHtml(str) {
 
 function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
 
+/* ---------------- Export / Import ---------------- */
+
+function slugify(str) {
+  const s = String(str || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return s || 'character';
+}
+
+function dateStamp() {
+  const d = new Date();
+  const pad = function (n) { return String(n).padStart(2, '0'); };
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+}
+
+/* Plain <a download> / Blob URLs are inert inside a published Claude
+   artifact page, but work fine when this file is run standalone (a
+   downloaded local copy, or self-hosted elsewhere) — see downloadViaBlob.
+   Inside Claude, the `downloads` capability is the real save surface. */
+function downloadViaBlob(filename, text) {
+  try {
+    const blob = new Blob([text], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    showToast('Downloaded ' + filename);
+  } catch (e) {
+    showToast('Export failed — try again');
+  }
+}
+
+async function saveJsonFile(filename, jsonStr) {
+  if (!window.claude) {
+    downloadViaBlob(filename, jsonStr);
+    return;
+  }
+  try {
+    const downloadsCap = await window.claude.use('downloads');
+    if (!downloadsCap) {
+      showToast('Downloads aren\u2019t available here');
+      return;
+    }
+    const result = await downloadsCap.save({ filename: filename, data: jsonStr });
+    showToast(result.status === 'saved' ? 'Saved ' + filename : 'Sent to your files');
+  } catch (err) {
+    if (err && err.code === 'declined') return; // they said no; leave it at that
+    showToast('Export failed — try again');
+  }
+}
+
+async function exportCharacterFile(character) {
+  const filename = slugify(character.name) + '.json';
+  await saveJsonFile(filename, JSON.stringify(character, null, 2));
+}
+
+async function exportAllCharactersFile() {
+  if (!state.characters.length) { showToast('No Threads to export yet'); return; }
+  const filename = 'weaveborn-characters-' + dateStamp() + '.json';
+  await saveJsonFile(filename, JSON.stringify(state.characters, null, 2));
+}
+
+/* A character exported from this app is already self-contained (formative
+   and ability are resolved snapshots, not lookups), so importing it back
+   just needs a fresh id — never reuse the file's id, so importing can
+   never silently overwrite an existing local character — and a pass
+   through normalizeCharacter for anything an older export might lack. */
+async function handleImportFile(file) {
+  if (!file) return;
+  let text;
+  try {
+    text = await file.text();
+  } catch (e) {
+    showToast('Could not read that file');
+    return;
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch (e) {
+    showToast('That file isn\u2019t valid JSON');
+    return;
+  }
+  const items = Array.isArray(parsed) ? parsed : [parsed];
+  let imported = 0;
+  let skipped = 0;
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (!item || typeof item !== 'object' || !item.playbookId || !PLAYBOOKS[item.playbookId]) {
+      skipped++;
+      continue;
+    }
+    const clone = JSON.parse(JSON.stringify(item));
+    clone.id = uid();
+    normalizeCharacter(clone);
+    await Store.save(clone);
+    imported++;
+  }
+  if (imported > 0) {
+    showToast(imported + (imported === 1 ? ' Thread' : ' Threads') + ' imported' + (skipped ? (' · ' + skipped + ' skipped') : ''));
+  } else {
+    showToast('Nothing importable in that file');
+  }
+  render();
+}
+
 /* Remaining pool values for a slot-assignment (axisValues), given the
    base pool and which key we're computing options for. */
 function remainingPoolFor(pool, assignedMap, forKey) {
@@ -1479,6 +1601,11 @@ function renderHome() {
     '</button>' +
     list +
     '<button class="btn btn-primary btn-new" data-action="new-character">Weave a new Thread</button>' +
+    '<div class="loom-utility-row">' +
+    '  <button class="btn btn-ghost" data-action="trigger-import">Import</button>' +
+    '  <button class="btn btn-ghost" data-action="export-all" ' + (chars.length ? '' : 'disabled') + '>Export all</button>' +
+    '</div>' +
+    '<input type="file" id="import-file-input" class="file-input-hidden" accept=".json,application/json" />' +
     '<p class="storage-note">' + backendNote + '</p>';
 }
 
@@ -1883,16 +2010,16 @@ function renderStatCard(c, pb, key) {
   const levelText = axisLevelText(axis, eff.total);
   const modified = eff.total !== eff.base;
   return '' +
-    '<div class="stat-card" data-action="cycle-karma-boost" data-key="' + key + '" role="button" tabindex="0" aria-label="' + escapeHtml(axis.label) + ', tap to stage a Karma boost">' +
+    '<div class="stat-card">' +
     '  <div class="stat-card-top">' +
-    '    <span class="stat-card-title">' +
+    '    <button class="stat-card-zone stat-card-zone-debility' + (debActive ? ' stat-card-zone-debility-active' : '') + '" data-action="toggle-debility" data-key="' + (deb ? deb.key : '') + '" ' + (deb ? '' : 'disabled') + ' aria-pressed="' + (debActive ? 'true' : 'false') + '" title="' + (deb ? escapeHtml(deb.blurb) : '') + '">' +
     '      <span class="stat-card-label">' + escapeHtml(axis.label) + '</span>' +
-    (deb ? ('<button class="debility-pill' + (debActive ? ' debility-pill-active' : '') + '" data-action="toggle-debility" data-key="' + deb.key + '" title="' + escapeHtml(deb.blurb) + '">' + escapeHtml(deb.label) + ' −1</button>') : '') +
-    '    </span>' +
-    '    <span class="stat-card-total-wrap">' +
+    (deb ? ('<span class="stat-card-debility-name' + (debActive ? ' stat-card-debility-name-active' : '') + '">' + escapeHtml(deb.label) + ' −1</span>') : '') +
+    '    </button>' +
+    '    <button class="stat-card-zone stat-card-zone-karma" data-action="cycle-karma-boost" data-key="' + key + '" aria-label="Tap to stage a Karma boost on ' + escapeHtml(axis.label) + '">' +
     (eff.boost > 0 ? ('<span class="stat-card-boost-tag">+' + eff.boost + '</span>') : '') +
     '      <span class="stat-card-total' + (modified ? ' stat-card-total-modified' : '') + '">' + eff.total + '</span>' +
-    '    </span>' +
+    '    </button>' +
     '  </div>' +
     '  <p class="stat-card-desc">' + (levelText ? escapeHtml(levelText) : '') + '</p>' +
     '</div>';
@@ -1955,6 +2082,7 @@ function renderSheet() {
          '<button class="btn btn-ghost" data-action="cancel-delete">Cancel</button>' +
          '<button class="btn btn-danger btn-danger-solid" data-action="confirm-delete">Yes, delete</button>')
       : ('<button class="btn btn-ghost" data-action="edit-character">Edit build</button>' +
+         '<button class="btn btn-ghost" data-action="export-character">Export</button>' +
          '<button class="btn btn-ghost btn-danger" data-action="delete-character">Delete</button>')) +
     '    </div>' +
     '  </div>' +
@@ -2125,6 +2253,14 @@ document.addEventListener('click', async function (e) {
     state.wizardStep = 0;
     state.view = 'wizard';
     render();
+  } else if (action === 'export-character') {
+    const c = currentCharacter();
+    if (c) await exportCharacterFile(c);
+  } else if (action === 'export-all') {
+    await exportAllCharactersFile();
+  } else if (action === 'trigger-import') {
+    const inputEl = document.getElementById('import-file-input');
+    if (inputEl) inputEl.click();
   } else if (action === 'delete-character') {
     // window.confirm() is blocked inside the sandboxed artifact frame, so
     // this is a two-click, in-page confirmation instead of a native dialog.
@@ -2183,6 +2319,12 @@ document.addEventListener('click', async function (e) {
 });
 
 document.addEventListener('change', function (e) {
+  if (e.target && e.target.id === 'import-file-input') {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = ''; // reset so re-selecting the same file still fires change
+    if (file) handleImportFile(file);
+    return;
+  }
   const select = e.target.closest('[data-pool-field]');
   if (select) {
     const field = select.getAttribute('data-pool-field');
@@ -2204,13 +2346,6 @@ document.addEventListener('change', function (e) {
     } else if (state.view === 'sheet' && field === 'notes') {
       persistActive(function (c) { c.notes = input.value; });
     }
-  }
-});
-
-document.addEventListener('keydown', function (e) {
-  if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.matches && e.target.matches('[role="button"][data-action]')) {
-    e.preventDefault();
-    e.target.click();
   }
 });
 
